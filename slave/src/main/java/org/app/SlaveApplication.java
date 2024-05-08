@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AirConditionerSystemApplication {
+public class SlaveApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AirConditionerSystemApplication.class, args);
+        SpringApplication.run(SlaveApplication.class, args);
     }
 
 }

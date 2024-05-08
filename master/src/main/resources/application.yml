@@ -1,6 +1,6 @@
 spring:
     application:
-        name: AirConditionerSystem
+        name: master
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         # TIPS: 导入数据库时需要修改已下信息
