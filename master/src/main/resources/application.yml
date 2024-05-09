@@ -16,3 +16,7 @@ mybatis-plus:
     global-config:
         db-config:
             id-type: ASSIGN_ID
+master:
+    heating-default-temperature: { 25, 30 }
+    refrigeration-default-temperature: { 18, 25 }
+    fan-cost: { "SLOW": 0.8, "MEDDLE": 1.0, "FAST": 1.2 }
