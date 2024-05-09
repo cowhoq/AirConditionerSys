@@ -1,5 +1,7 @@
 package org.app.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.entity.Request;
@@ -7,15 +9,19 @@ import org.app.entity.WorkMode;
 import org.graalvm.collections.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
+
+import static java.lang.System.exit;
 
 
 /**
@@ -29,17 +35,20 @@ public class MasterService {
     @Autowired
     private RequestService requestService;
 
-    @Value("${master.heating-default-temperature}")
-    private Pair<Integer, Integer> heatingDefaultTemperature;
+    @Value("classpath:config.json")
+    Resource resource;
 
-    @Value("${mater.refrigeration-default-temperature}")
-    private Pair<Integer, Integer> refrigerationDefaultTemperature;
+    private Pair<Integer, Integer> heatingDefaultTemp;
 
-    @Value("#{${master.fan-cost}}")
+    private Pair<Integer, Integer> refrigerationDefaultTemp;
+
+    @Getter
     private Map<String, Double> fanCost;
 
+    @Getter
     private WorkMode workMode;
 
+    @Getter
     private Pair<Integer, Integer> range;
 
     /**
@@ -54,19 +63,42 @@ public class MasterService {
      */
     private Map<Long, String> slaveIPMap;
 
+
+    /**
+     * 获取默认参数
+     */
+    private void getDefaultParams() {
+        try {
+            var mapper = new ObjectMapper();
+            Map<String, Object> config = mapper.readValue(resource.getInputStream(), Map.class);
+            var list = (List) config.get("heating-default-temperature");
+            heatingDefaultTemp = Pair.create((Integer) list.get(0), (Integer) list.get(1));
+            list = (List) config.get("refrigeration-default-temperature");
+            refrigerationDefaultTemp = Pair.create((Integer) list.get(0), (Integer) list.get(1));
+            fanCost = (Map<String, Double>) config.get("fan-cost");
+        } catch (IOException e) {
+            log.error("读取配置文件失败, 请检查 resources 文件夹下是否存在 config.json");
+            exit(1);
+        } catch (Exception e) {
+            log.error("配置文件格式错误, 请检查 config.json 格式");
+            exit(1);
+        }
+    }
+
     /**
      * 开机, 并设置运行状态
      *
      * @return 开机成功返回 true, 否则返回 false
      */
     public Boolean powerOn(WorkMode workMode, Pair<Integer, Integer> range) {
+        getDefaultParams();
         this.workMode = WorkMode.REFRIGERATION;
-        this.range = refrigerationDefaultTemperature;
+        this.range = refrigerationDefaultTemp;
 
         if (workMode != null) {
             this.workMode = workMode;
             if (this.workMode == WorkMode.HEATING)
-                this.range = heatingDefaultTemperature;
+                this.range = heatingDefaultTemp;
         }
         if (range != null)
             this.range = range;
@@ -74,6 +106,8 @@ public class MasterService {
         // 设置为线程安全性的集合
         this.requestList = Collections.synchronizedList(new LinkedList<>());
         this.slaveIPMap = Collections.synchronizedMap(new HashMap<>());
+        log.info("主机启动成功!");
+        log.info("主机工作参数: {}, {}, {}", workMode, range, fanCost.entrySet());
         return true;
     }
 
@@ -228,6 +262,10 @@ public class MasterService {
      */
     @Scheduled(fixedRate = 1000)
     private void schedule() {
+        // 交给 spring boot 管理后, 主机没有启动(各项参数未初始化)就进行调度, 需要判断一下
+        if (requestList == null)
+            return;
+
         var size = requestList.size();
         int count = 0;
         for (int i = 0; i < size; i++) {

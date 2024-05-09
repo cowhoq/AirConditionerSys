@@ -8,7 +8,7 @@ group = "org.app"
 version = "0.0.1-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_22
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
