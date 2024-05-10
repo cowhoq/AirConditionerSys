@@ -20,6 +20,7 @@ public class RoomDictionary {
         setRoomValue(roomId, "curTemp", 26.0);
         setRoomValue(roomId, "setTemp", 46.0);
         setRoomValue(roomId, "mode", "high");
+        setRoomValue(roomId, "wind", true);  // 送风请求
     }
 
     public void setRoomValue(int roomId, String key, Object value) {

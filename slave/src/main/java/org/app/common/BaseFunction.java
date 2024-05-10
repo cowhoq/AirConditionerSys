@@ -17,25 +17,25 @@ public class BaseFunction {
     private static Double midSpeed = 0.8;  // 中风速每分钟变化0.8度
     private static Double lowSpeed = 0.6;  // 低风速每分钟变化0.6度
 
-    public static double changeTemp(RoomDictionary roomDictionary, double curTemp, int roomId) {
+    public static double changeTemp(RoomDictionary roomDictionary, double curTemp, int roomId, String masterMode) {
         // off:手动关闭，温度不变
         // autoOff:自动关闭，温度变化
         // on:打开
         double setTemp = (double) roomDictionary.getRoomValue(roomId, "setTemp");
         String mode = (String) roomDictionary.getRoomValue(roomId, "mode");
+        boolean haveWind = (boolean) roomDictionary.getRoomValue(roomId, "wind");
 
 
         // 自动停止后升温
         if (roomDictionary.getRoomValue(roomId, "acStatus").equals("autoOff")) {
             curTemp += UPTEMP;
-            roomDictionary.setRoomValue(roomId, "curTemp", curTemp);
             if (Math.abs(curTemp - setTemp) >= 1 - 0.0001) // 重新启动
                 roomDictionary.setRoomValue(roomId, "acStatus", "on");
         }
         // 空调打开了
         else if (roomDictionary.getRoomValue(roomId, "acStatus").equals("on")) {
             // 降温
-            if (curTemp > setTemp) {
+            if (curTemp > setTemp && masterMode.equals("cold") && haveWind) {
                 switch (mode) {
                     case "low":
                         curTemp -= lowSpeed;
@@ -51,7 +51,7 @@ public class BaseFunction {
                 if (curTemp < setTemp) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
             }
             // 升温
-            else if (curTemp < setTemp) {
+            else if (curTemp < setTemp && masterMode.equals("hot") && haveWind) {
                 switch (mode) {
                     case "low":
                         curTemp += lowSpeed;
@@ -65,11 +65,28 @@ public class BaseFunction {
                 }
                 // 跨越设定值
                 if (curTemp > setTemp) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
-            }
+            } else curTemp += UPTEMP;  // 主机与从机冲突
             // 达到目标温度，自动停止
             if (Math.abs(curTemp - setTemp) < 0.0001) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
         }
 
         return curTemp;
     }
+
+    public static RoomDictionary changeSetTemp(RoomDictionary roomDictionary, int roomId, String mode) {
+        double setTemp = (double) roomDictionary.getRoomValue(roomId, "setTemp");
+        if (mode.equals("up"))
+            roomDictionary.setRoomValue(roomId, "setTemp", setTemp + 1);
+        else
+            roomDictionary.setRoomValue(roomId, "setTemp", setTemp - 1);
+
+        return roomDictionary;
+    }
+
+    public static RoomDictionary changeMode(RoomDictionary roomDictionary, int roomId, String mode) {
+        roomDictionary.setRoomValue(roomId, "mode", mode);
+        return roomDictionary;
+    }
 }
+
+
