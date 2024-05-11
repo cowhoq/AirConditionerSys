@@ -2,6 +2,8 @@ package org.app.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
+import org.app.service.AsyncService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,20 +25,21 @@ import static java.lang.Thread.sleep;
 @Slf4j
 @RestController()
 public class AirController {
-    public RoomDictionary roomDictionary = new RoomDictionary();
 
-    //TODO： 主机模式，cold为制冷，hot为供暖，需要通过通信获得
-    public String masterMode = "cold";
+    @Autowired
+    private AsyncService asyncService;
+    public static int SIZE = 5;
+
+    public static RoomDictionary roomDictionary = new RoomDictionary();
 
 
     @PostConstruct
     public void init() {
         // 启动后初始化五个房间
-        roomDictionary.addRoom(1);
-        roomDictionary.addRoom(2);
-        roomDictionary.addRoom(3);
-        roomDictionary.addRoom(4);
-        roomDictionary.addRoom(5);
+        for (int i = 1; i <= SIZE; i++) {
+            roomDictionary.addRoom(i);
+        }
+
     }
 
     /**
@@ -77,14 +80,17 @@ public class AirController {
         return roomDictionary.getRoomValue(roomId, "acStatus");
     }
 
+        // 上一次请求
+        public static String[] lastTime = new String[SIZE];
+
     /**
      * 修改设定温度，升高一度
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/upSetTemp")
-    public String upSetTemp(@PathVariable("roomId") int roomId) {
+    public String upSetTemp(@PathVariable("roomId") int roomId) throws InterruptedException {
+        asyncService.setRequest(roomId, "up");
         //TODO: 需要将设定温度传给前端,且设定温度不能超过限制
-        roomDictionary = BaseFunction.changeSetTemp(roomDictionary, roomId, "up");
         return "OK";
     }
 
@@ -93,9 +99,9 @@ public class AirController {
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/downSetTemp")
-    public String downSetTemp(@PathVariable("roomId") int roomId) {
+    public String downSetTemp(@PathVariable("roomId") int roomId) throws InterruptedException {
+        asyncService.setRequest(roomId, "down");
         //TODO: 需要将设定温度传给前端,且设定温度不能超过限制
-        roomDictionary = BaseFunction.changeSetTemp(roomDictionary, roomId, "down");
         return "OK";
     }
 
@@ -139,7 +145,9 @@ public class AirController {
         for (int roomId = 1; roomId <= 5; roomId++) {
             double curTemp = (double) roomDictionary.getRoomValue(roomId, "curTemp");
             System.out.print(roomId + ":" + String.format("%.1f", curTemp) + "\t");
-            double newCurTemp = BaseFunction.changeTemp(roomDictionary, curTemp, roomId, masterMode);
+
+
+            double newCurTemp = BaseFunction.changeTemp(roomDictionary, curTemp, roomId);
             roomDictionary.setRoomValue(roomId, "curTemp", newCurTemp);
         }
         System.out.println();

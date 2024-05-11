@@ -17,13 +17,18 @@ public class BaseFunction {
     private static Double midSpeed = 0.8;  // 中风速每分钟变化0.8度
     private static Double lowSpeed = 0.6;  // 低风速每分钟变化0.6度
 
-    public static double changeTemp(RoomDictionary roomDictionary, double curTemp, int roomId, String masterMode) {
+    public static double changeTemp(RoomDictionary roomDictionary, double curTemp, int roomId) {
         // off:手动关闭，温度不变
         // autoOff:自动关闭，温度变化
         // on:打开
         double setTemp = (double) roomDictionary.getRoomValue(roomId, "setTemp");
         String mode = (String) roomDictionary.getRoomValue(roomId, "mode");
         boolean haveWind = (boolean) roomDictionary.getRoomValue(roomId, "wind");
+
+        if (roomDictionary.getRoomValue(roomId, "acStatus").equals("off")) {
+            curTemp += UPTEMP;
+            // TODO: 发停止送风请求给主机
+        }
 
 
         // 自动停止后升温
@@ -34,8 +39,9 @@ public class BaseFunction {
         }
         // 空调打开了
         else if (roomDictionary.getRoomValue(roomId, "acStatus").equals("on")) {
+            // TODO: 发送风请求给主机
             // 降温
-            if (curTemp > setTemp && masterMode.equals("cold") && haveWind) {
+            if (curTemp > setTemp && haveWind) {
                 switch (mode) {
                     case "low":
                         curTemp -= lowSpeed;
@@ -48,10 +54,13 @@ public class BaseFunction {
                         break;
                 }
                 // 跨越设定值
-                if (curTemp < setTemp) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+                if (curTemp < setTemp) {
+                    roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+                    // TODO: 发停止送风请求给主机
+                }
             }
             // 升温
-            else if (curTemp < setTemp && masterMode.equals("hot") && haveWind) {
+            else if (curTemp < setTemp && haveWind) {
                 switch (mode) {
                     case "low":
                         curTemp += lowSpeed;
@@ -64,10 +73,16 @@ public class BaseFunction {
                         break;
                 }
                 // 跨越设定值
-                if (curTemp > setTemp) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+                if (curTemp > setTemp) {
+                    roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+                    // TODO: 发停止送风请求给主机
+                }
             } else curTemp += UPTEMP;  // 主机与从机冲突
             // 达到目标温度，自动停止
-            if (Math.abs(curTemp - setTemp) < 0.0001) roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+            if (Math.abs(curTemp - setTemp) < 0.0001) {
+                roomDictionary.setRoomValue(roomId, "acStatus", "autoOff");
+                // TODO: 发停止送风请求给主机
+            }
         }
 
         return curTemp;

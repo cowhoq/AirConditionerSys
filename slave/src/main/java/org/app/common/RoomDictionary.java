@@ -16,11 +16,16 @@ public class RoomDictionary {
 
     public void addRoom(int roomId) {
         roomDictionary.put(roomId, new HashMap<>());
-        setRoomValue(roomId, "acStatus", "on");
+        // empty:房间空置，开房后empty->off，温度开始变化，empty状态下温度不变
+        // off:手动关闭，温度变化
+        // autoOff:自动关闭，温度变化
+        // on:打开
+        setRoomValue(roomId, "acStatus", "empty");
         setRoomValue(roomId, "curTemp", 26.0);
         setRoomValue(roomId, "setTemp", 46.0);
         setRoomValue(roomId, "mode", "high");
-        setRoomValue(roomId, "wind", true);  // 送风请求
+        // TODO:需要发送风请求给主机，根据主机的反馈判断是否有风
+        setRoomValue(roomId, "wind", true);  // 是否有风
     }
 
     public void setRoomValue(int roomId, String key, Object value) {
