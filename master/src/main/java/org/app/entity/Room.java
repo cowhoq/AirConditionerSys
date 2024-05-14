@@ -1,5 +1,6 @@
 package org.app.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 /**
@@ -7,6 +8,8 @@ import lombok.Data;
  */
 @Data
 public class Room {
+    @TableId
     Long roomId;
+
     Long userId;
 }
