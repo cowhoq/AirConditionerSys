@@ -6,4 +6,5 @@ package org.app.entity;
 public enum WorkMode {
     HEATING,
     REFRIGERATION,
+    OFF
 }

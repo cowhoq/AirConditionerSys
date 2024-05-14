@@ -118,6 +118,7 @@ public class MasterService {
      * @return 关机成功返回 true, 否则返回 false
      */
     public Boolean powerOff() {
+        this.workMode = WorkMode.OFF;
         return true;
     }
 
@@ -249,7 +250,7 @@ public class MasterService {
      * @param slaveIP 从机 ip
      */
     private void sendToSlave(String slaveIP) {
-        var url = "https://" + slaveIP + ":8080";
+        var url = "https://" + slaveIP + ":8080" + "/send";
         var restTemplate = new RestTemplate();
         restTemplate.getForObject(url, R.class);
     }
@@ -279,5 +280,34 @@ public class MasterService {
             if (count == 3)
                 break;
         }
+    }
+
+
+    /**
+     * 供从机调用, 实时获取本次请求所需要的消耗的能量和所需支付的金额
+     * <p>
+     * 能量和金额都是使用了 `BigDecimal` 类, 可能不太方便.
+     * TODO: 后续可能会因此调整为 `Double` 类型
+     * <p>
+     * TODO: 值得注意的是, 如果从机修改了风速请求, 则相当于重新发送一次请求, 费用从 0 开始计算,
+     *       而从机改变温度则不会, 这一点可能会根据后续业务进行调整
+     *
+     * @param roomId 从机的 roomId
+     * @return 消耗的能量和金额
+     */
+    public Pair<BigDecimal, BigDecimal> getEnergyAndFee(Long roomId) {
+        var optionalRequest = requestList.stream().filter(i -> i.getRoomId().equals(roomId)).findFirst();
+
+        if (optionalRequest.isPresent()) {
+            var request = optionalRequest.get();
+            var now = LocalDateTime.now();
+            var seconds = Duration.between(request.getStartTime(), now).toSeconds();
+            var minutes = seconds / 60;
+            if (seconds % 60 > 0)
+                minutes++;
+            var energy = new BigDecimal(minutes * fanCost.get(request.getFanSpeed()));
+            return Pair.create(energy, energy.multiply(new BigDecimal(5)));
+        }
+        return null;
     }
 }
