@@ -48,7 +48,6 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
      * <p>
      * TODO: 这个方法对应于需求文档中的第12条, 第12条所需要的信息更为具体,
      *       所以我希望放到接口层完成, 如果有需要可以分成不同层完成此工作
-     *
      */
     public List<Request> getRequestListByPeriod(Period period) {
         switch (period) {

@@ -2,8 +2,9 @@ package org.app.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.app.common.R;
+import org.app.common.CheckWorkMode;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
 import org.graalvm.collections.Pair;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -42,13 +42,11 @@ public class MasterService {
 
     private Pair<Integer, Integer> refrigerationDefaultTemp;
 
-    @Getter
     private Map<String, Double> fanCost;
 
     @Getter
-    private WorkMode workMode;
+    private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
-    @Getter
     private Pair<Integer, Integer> range;
 
     /**
@@ -57,11 +55,12 @@ public class MasterService {
     private List<Request> requestList;
 
     /**
-     * 从机请求 ip
-     * <p>
-     * 我们只在收到从机 powerOn 请求时记录其 IP, 并假定在收到 powerOff 请求之前其 IP 不发生改变.
+     * 保存在一个时间片内可以送风的房间 id
      */
-    private Map<Long, String> slaveIPMap;
+    private Set<Long> sendAirRoomId;
+
+    @Setter
+    private Boolean TEST = false;
 
 
     /**
@@ -105,9 +104,9 @@ public class MasterService {
 
         // 设置为线程安全性的集合
         this.requestList = Collections.synchronizedList(new LinkedList<>());
-        this.slaveIPMap = Collections.synchronizedMap(new HashMap<>());
+        this.sendAirRoomId = Collections.synchronizedSet(new HashSet<>());
         log.info("主机启动成功!");
-        log.info("主机工作参数: {}, {}, {}", workMode, range, fanCost.entrySet());
+        log.info("主机工作参数: {}, {}, {}", this.workMode, this.range, fanCost.entrySet());
         return true;
     }
 
@@ -143,23 +142,54 @@ public class MasterService {
 
 
     /**
-     * 接收到来自从机开机的请求
+     * 接收到来自从机的请求
+     * <p>
+     * 无论收到的请求是开机, 还是调整工作参数 都应该调用这个函数,
+     * 相当于`slavePowerOn` 与 `slaveChangeParams` 合并了
      *
-     * @param request 从机的请求
+     * @param newRequest 从机的请求
      * @return 处理成功返回 true, 否则返回 false
      */
-    public Boolean slavePowerOn(Request request, String slaveIP) {
+    @CheckWorkMode
+    public Boolean slaveRequest(Request newRequest) {
         // 判断请求队列是否有请求
-        var _request = getRequest(request.getRoomId());
-        if (_request != null)
-            return false;
+        var oldRequest = getRequest(newRequest.getRoomId());
 
-        if (!checkRequestTemp(request))
+        if (oldRequest == null) {
+            if (!checkRequestTemp(newRequest))
+                return false;
+            newRequest.setStartTime(LocalDateTime.now());
+            requestList.add(newRequest);
+            return true;
+        } else {
+            // 改变风速
+            if (!Objects.equals(oldRequest.getFanSpeed(), newRequest.getFanSpeed())) {
+                /*
+                 * 风速改变的同时, 温度也可能改变
+                 * 但是温度改变不需要检查是否和 oldRequest 相同, 因为不影响计费结果
+                 * 只需要检查一下是否合法即可
+                 */
+                if (!checkRequestTemp(newRequest)) {
+                    requestList.add(oldRequest);
+                    return false;
+                }
+                calcFeeAndSave(oldRequest);
+                newRequest.setStartTime(LocalDateTime.now());
+                requestList.add(newRequest);
+                return true;
+            }
+
+            if (oldRequest.getStopTemp() != newRequest.getStopTemp()) {
+                if (!checkRequestTemp(newRequest)) {
+                    requestList.add(oldRequest);
+                    return false;
+                }
+                oldRequest.setStopTemp(newRequest.getStopTemp());
+                requestList.add(oldRequest);
+                return true;
+            }
             return false;
-        request.setStartTime(LocalDateTime.now());
-        requestList.add(request);
-        slaveIPMap.put(request.getRoomId(), slaveIP);
-        return true;
+        }
     }
 
     /**
@@ -181,41 +211,11 @@ public class MasterService {
 
 
     /**
-     * 从机改变工作参数
-     *
-     * @param roomId   从机的 roomId
-     * @param fanSpeed 从机设定风速
-     * @param temp     从机设定温度 (当 `fanSpeed == null` 时), 否则为从机当前温度
-     * @return 处理成功返回 true, 否则返回 false
-     */
-    public Boolean slaveChangeParams(Long roomId, String fanSpeed, Integer temp) {
-        var request = getRequest(roomId);
-        if (request == null)
-            return false;
-        if (fanSpeed != null) {
-            // 改变风速时将原有请求结束, 并计算总花费存入数据库
-            var stopTemp = request.getStopTemp();
-            request.setStopTemp(temp); // 将当前室温作为结束室温
-            calcFeeAndSave(request);
-
-            // 更改请求参数, 并添加到请求队列中
-            request.setStartTime(LocalDateTime.now());
-            request.setStartTemp(temp); // 将当前室温写入初始室温
-            request.setStopTemp(stopTemp);
-            request.setFanSpeed(fanSpeed);
-        } else
-            request.setStopTemp(temp);
-
-        requestList.add(request);
-        return true;
-    }
-
-
-    /**
      * 计算一个请求的总花费并写入数据库
      *
      * @param request 请求
      */
+    @CheckWorkMode
     private void calcFeeAndSave(Request request) {
         request.setStopTime(LocalDateTime.now());
         var seconds = Duration.between(request.getStartTime(), request.getStopTime()).toSeconds();
@@ -235,24 +235,13 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 如果从机在请求列表中，则返回 true, 否则返回 false
      */
+    @CheckWorkMode
     public Boolean slavePowerOff(Long roomId) {
         var request = getRequest(roomId);
         if (request == null)
             return false;
         calcFeeAndSave(request);
-        slaveIPMap.remove(roomId);
         return true;
-    }
-
-    /**
-     * 向从机发送送风请求 (GET)
-     *
-     * @param slaveIP 从机 ip
-     */
-    private void sendToSlave(String slaveIP) {
-        var url = "https://" + slaveIP + ":8081" + "/send";
-        var restTemplate = new RestTemplate();
-        restTemplate.getForObject(url, R.class);
     }
 
 
@@ -262,24 +251,32 @@ public class MasterService {
      * 目前的调度策略为时间片轮询, 轮询时长为 1 分钟
      */
     @Scheduled(fixedRate = 1000)
-    private void schedule() {
+    public void schedule() {
         // 交给 spring boot 管理后, 主机没有启动(各项参数未初始化)就进行调度, 需要判断一下
-        if (requestList == null)
+        if (workMode.equals(WorkMode.OFF))
             return;
 
         var size = requestList.size();
-        int count = 0;
-        for (int i = 0; i < size; i++) {
-            // 从请求列表中获取第一次, 然后将其插入到队列末尾
-            var request = requestList.removeFirst();
-            requestList.addLast(request);
-            if (checkRequestTemp(request)) {
-                sendToSlave(slaveIPMap.get(request.getRoomId()));
-                count++;
+        if (size == 0)
+            return;
+        else if (size <= 3)       // 如果请求数 <= 3, 主机完全可以调度地过来直接添加到 sendAirRoomId 中即可
+            sendAirRoomId.addAll(requestList.stream().map(Request::getRoomId).toList());
+        else {
+            var count = 0;
+            for (var i = 0; i < size; i++) {
+                // 从请求列表中获取第一次, 然后将其插入到队列末尾
+                var request = requestList.removeFirst();
+                requestList.addLast(request);
+                if (checkRequestTemp(request)) {
+                    sendAirRoomId.add(request.getRoomId());
+                    count++;
+                }
+                if (count == 3)
+                    break;
             }
-            if (count == 3)
-                break;
         }
+        if (TEST)
+            log.info("本次调度请求有: {}", sendAirRoomId);
     }
 
 
@@ -309,5 +306,20 @@ public class MasterService {
             return Pair.create(energy, energy.multiply(new BigDecimal(5)));
         }
         return null;
+    }
+
+    /**
+     * 获取主机工作的温度范围
+     * <p>
+     * 原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
+     */
+    @CheckWorkMode
+    public Pair<Integer, Integer> getRange() {
+        return range;
+    }
+
+    @CheckWorkMode
+    public Boolean contains(Long roomId) {
+        return sendAirRoomId.contains(roomId);
     }
 }

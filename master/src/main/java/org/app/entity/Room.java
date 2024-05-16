@@ -12,4 +12,6 @@ public class Room {
     Long roomId;
 
     Long userId;
+
+    Boolean inuse;
 }
