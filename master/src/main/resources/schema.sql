@@ -16,7 +16,8 @@ DROP TABLE IF EXISTS room;
 CREATE TABLE room
 (
     room_id bigint PRIMARY KEY NOT NULL,
-    user_id bigint
+    user_id bigint,
+    inuse   boolean            NOT NULL DEFAULT FALSE
 );
 
 -- 中央空调记录的每次温控请求
@@ -27,8 +28,8 @@ CREATE TABLE request
     room_id           bigint             NOT NULL,
     start_time        DATETIME           NOT NULL,
     stop_time         DATETIME           NOT NULL,
-    start_temperature int                NOT NULL,
-    stop_temperature  int                NOT NULL,
+    start_temperature double             NOT NULL,
+    stop_temperature  double             NOT NULL,
     fan_speed         VARCHAR(6)         NOT NULL DEFAULT 'MEDIUM', -- 风速等级
     total_fee         decimal(10, 2)     NOT NULL
 );
