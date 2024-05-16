@@ -2,7 +2,9 @@ package org.app.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.app.common.CheckWorkMode;
 import org.app.common.R;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
@@ -42,13 +44,11 @@ public class MasterService {
 
     private Pair<Integer, Integer> refrigerationDefaultTemp;
 
-    @Getter
     private Map<String, Double> fanCost;
 
     @Getter
-    private WorkMode workMode;
+    private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
-    @Getter
     private Pair<Integer, Integer> range;
 
     /**
@@ -62,6 +62,9 @@ public class MasterService {
      * 我们只在收到从机 powerOn 请求时记录其 IP, 并假定在收到 powerOff 请求之前其 IP 不发生改变.
      */
     private Map<Long, String> slaveIPMap;
+
+    @Setter
+    private Boolean TEST = false;
 
 
     /**
@@ -107,7 +110,7 @@ public class MasterService {
         this.requestList = Collections.synchronizedList(new LinkedList<>());
         this.slaveIPMap = Collections.synchronizedMap(new HashMap<>());
         log.info("主机启动成功!");
-        log.info("主机工作参数: {}, {}, {}", workMode, range, fanCost.entrySet());
+        log.info("主机工作参数: {}, {}, {}", this.workMode, this.range, fanCost.entrySet());
         return true;
     }
 
@@ -148,6 +151,7 @@ public class MasterService {
      * @param request 从机的请求
      * @return 处理成功返回 true, 否则返回 false
      */
+    @CheckWorkMode
     public Boolean slavePowerOn(Request request, String slaveIP) {
         // 判断请求队列是否有请求
         var _request = getRequest(request.getRoomId());
@@ -188,6 +192,7 @@ public class MasterService {
      * @param temp     从机设定温度 (当 `fanSpeed == null` 时), 否则为从机当前温度
      * @return 处理成功返回 true, 否则返回 false
      */
+    @CheckWorkMode
     public Boolean slaveChangeParams(Long roomId, String fanSpeed, Integer temp) {
         var request = getRequest(roomId);
         if (request == null)
@@ -216,6 +221,7 @@ public class MasterService {
      *
      * @param request 请求
      */
+    @CheckWorkMode
     private void calcFeeAndSave(Request request) {
         request.setStopTime(LocalDateTime.now());
         var seconds = Duration.between(request.getStartTime(), request.getStopTime()).toSeconds();
@@ -235,6 +241,7 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 如果从机在请求列表中，则返回 true, 否则返回 false
      */
+    @CheckWorkMode
     public Boolean slavePowerOff(Long roomId) {
         var request = getRequest(roomId);
         if (request == null)
@@ -262,9 +269,9 @@ public class MasterService {
      * 目前的调度策略为时间片轮询, 轮询时长为 1 分钟
      */
     @Scheduled(fixedRate = 1000)
-    private void schedule() {
+    public void schedule() {
         // 交给 spring boot 管理后, 主机没有启动(各项参数未初始化)就进行调度, 需要判断一下
-        if (requestList == null)
+        if (workMode.equals(WorkMode.OFF))
             return;
 
         var size = requestList.size();
@@ -274,7 +281,10 @@ public class MasterService {
             var request = requestList.removeFirst();
             requestList.addLast(request);
             if (checkRequestTemp(request)) {
-                sendToSlave(slaveIPMap.get(request.getRoomId()));
+                if (TEST) // 如果是 TEST 模式, 则打印请求信息
+                    log.info("{}", request);
+                else
+                    sendToSlave(slaveIPMap.get(request.getRoomId()));
                 count++;
             }
             if (count == 3)
@@ -309,5 +319,15 @@ public class MasterService {
             return Pair.create(energy, energy.multiply(new BigDecimal(5)));
         }
         return null;
+    }
+
+    /**
+     * 获取主机工作的温度范围
+     * <p>
+     * 原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
+     */
+    @CheckWorkMode
+    public Pair<Integer, Integer> getRange() {
+        return range;
     }
 }

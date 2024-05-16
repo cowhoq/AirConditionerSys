@@ -1,3 +1,7 @@
+DROP DATABASE IF EXISTS `air_conditioner_system`;
+CREATE DATABASE `air_conditioner_system`;
+USE `air_conditioner_system`;
+
 -- 顾客
 DROP TABLE IF EXISTS user;
 CREATE TABLE user
