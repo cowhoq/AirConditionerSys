@@ -21,11 +21,11 @@ public class RoomDictionary {
         // autoOff:自动关闭，温度变化
         // on:打开
         setRoomValue(roomId, "acStatus", "empty");
-        setRoomValue(roomId, "curTemp", 26.0);
-        setRoomValue(roomId, "setTemp", 46.0);
-        setRoomValue(roomId, "mode", "high");
+        setRoomValue(roomId, "curTemp", 30.0);
+        setRoomValue(roomId, "setTemp", 24.0);
+        setRoomValue(roomId, "mode", "FAST");
         // TODO:需要发送风请求给主机，根据主机的反馈判断是否有风
-        setRoomValue(roomId, "wind", true);  // 是否有风
+        setRoomValue(roomId, "wind", false);  // 是否有风
     }
 
     public void setRoomValue(int roomId, String key, Object value) {
