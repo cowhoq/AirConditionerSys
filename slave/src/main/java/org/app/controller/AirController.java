@@ -4,14 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.app.service.AsyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.app.common.BaseFunction;
 import org.app.common.RoomDictionary;
 import javax.annotation.PostConstruct;
@@ -26,17 +24,14 @@ public class AirController {
 
     @Autowired
     private AsyncService asyncService;
-    public static int SIZE = 5;
 
     public static RoomDictionary roomDictionary = new RoomDictionary();
+    public static Integer User_roomId= 0;
 
 
     @PostConstruct
     public void init() {
-        // 启动后初始化五个房间
-        for (int i = 1; i <= SIZE; i++) {
-            roomDictionary.addRoom(i);
-        }
+        roomDictionary.addRoom(0);
     }
 
     /**
@@ -71,7 +66,8 @@ public class AirController {
         Object acStatus = roomDictionary.getRoomValue(roomId, "acStatus");
 
         if (acStatus.equals("on")) {
-            acStatus = "off";
+            if(BaseFunction.PowerOff((roomId)))
+                acStatus = "off";
         }else
         {
             if(BaseFunction.PowerOn(roomDictionary,roomId))
@@ -82,7 +78,6 @@ public class AirController {
     }
 
         // 上一次请求
-        public static String[] lastTime = new String[SIZE];
 
     /**
      * 修改设定温度，升高一度
@@ -90,7 +85,7 @@ public class AirController {
      */
     @PostMapping(value = "/{roomId}/upSetTemp")
     public String upSetTemp(@PathVariable("roomId") int roomId) throws InterruptedException {
-        asyncService.setRequest(roomId, "up");
+        //asyncService.setRequest(roomId, "up");
         //TODO: 需要将设定温度传给前端,且设定温度不能超过限制
         return "OK";
     }
@@ -101,7 +96,7 @@ public class AirController {
      */
     @PostMapping(value = "/{roomId}/downSetTemp")
     public String downSetTemp(@PathVariable("roomId") int roomId) throws InterruptedException {
-        asyncService.setRequest(roomId, "down");
+        //asyncService.setRequest(roomId, "down");
         //TODO: 需要将设定温度传给前端,且设定温度不能超过限制
         return "OK";
     }
@@ -139,21 +134,15 @@ public class AirController {
         return "OK";
     }
 
-
-    @Scheduled(fixedRate = 2000)
-    public void getCurTemp() throws InterruptedException {
-        // 假设有5个房间,房间温度开房才变化
-        for (int roomId = 1; roomId <= SIZE; roomId=1) {
-            double curTemp = (double) roomDictionary.getRoomValue(roomId, "curTemp");
-            //System.out.print(roomId + ":" + String.format("%.1f", curTemp) + "\t");
-
-
-            double newCurTemp = BaseFunction.changeTemp(roomDictionary, curTemp, roomId);
-            roomDictionary.setRoomValue(roomId, "curTemp", newCurTemp);
+    @PostMapping("/login")
+    public ResponseEntity<Void> login(@RequestParam int roomId,
+                                      @RequestParam String User,
+                                      @RequestParam String Password){
+        if(BaseFunction.Cheak_login(roomId,User,Password)){
+            User_roomId = roomId;
+            roomDictionary.addRoom(roomId);
+            return ResponseEntity.ok().build();
         }
-        //System.out.println();
+        return ResponseEntity.badRequest().build();
     }
-
-
-
 }

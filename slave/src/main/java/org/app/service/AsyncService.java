@@ -15,7 +15,7 @@ import static org.app.controller.AirController.roomDictionary;
 @Service
 public class AsyncService {
 
-    @Async
+/*    @Async
     public void setRequest(int roomId, String type) throws InterruptedException {
         if (AirController.lastTime[roomId] == null) {
             AirController.lastTime[roomId] = type;
@@ -25,5 +25,5 @@ public class AsyncService {
             // System.out.println(roomDictionary.getRoomValue(roomId, "setTemp"));
         } else AirController.lastTime[roomId] = type;
 
-    }
+    }*/
 }
