@@ -250,7 +250,7 @@ public class MasterService {
      * @param slaveIP 从机 ip
      */
     private void sendToSlave(String slaveIP) {
-        var url = "https://" + slaveIP + ":8080" + "/send";
+        var url = "https://" + slaveIP + ":8081" + "/send";
         var restTemplate = new RestTemplate();
         restTemplate.getForObject(url, R.class);
     }

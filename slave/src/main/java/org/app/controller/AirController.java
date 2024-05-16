@@ -1,22 +1,20 @@
 package org.app.controller;
-
 import lombok.extern.slf4j.Slf4j;
-import org.app.common.R;
+//import org.app.common.R;
 import org.app.service.AsyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.app.common.BaseFunction;
 import org.app.common.RoomDictionary;
-
 import javax.annotation.PostConstruct;
-
-import static java.lang.Thread.sleep;
 
 /**
  * @author hbw
@@ -39,7 +37,6 @@ public class AirController {
         for (int i = 1; i <= SIZE; i++) {
             roomDictionary.addRoom(i);
         }
-
     }
 
     /**
@@ -50,7 +47,6 @@ public class AirController {
     public String getNewRoom(@PathVariable("roomId") int roomId) throws InterruptedException {
         roomDictionary.setRoomValue(roomId, "acStatus", "off");
         // System.out.println(roomDictionary.getRoomValue(roomId, "curTemp"));
-
         return "OK";
     }
 
@@ -73,9 +69,14 @@ public class AirController {
     public Object toggleAC(@PathVariable("roomId") int roomId) {
         // TODO: 房间可能不存在, 以后需要增加异常处理
         Object acStatus = roomDictionary.getRoomValue(roomId, "acStatus");
+
         if (acStatus.equals("on")) {
             acStatus = "off";
-        }else acStatus = "on"; // 开机后将房间温度显示到控制面板上
+        }else
+        {
+            if(BaseFunction.PowerOn(roomDictionary,roomId))
+                acStatus = "on"; // 开机后将房间温度显示到控制面板上
+        }
         roomDictionary.setRoomValue(roomId, "acStatus", acStatus);
         return roomDictionary.getRoomValue(roomId, "acStatus");
     }
@@ -112,7 +113,7 @@ public class AirController {
     @PostMapping(value = "/{roomId}/lowSpeed")
     public String lowSpeed(@PathVariable("roomId") int roomId) {
         //TODO: 需要将风速请求传给前端
-        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "low");
+        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "SLOW");
         return "OK";
     }
 
@@ -123,7 +124,7 @@ public class AirController {
     @PostMapping(value = "/{roomId}/midSpeed")
     public String midSpeed(@PathVariable("roomId") int roomId) {
         //TODO: 需要将风速请求传给前端
-        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "mid");
+        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "MEDDLE");
         return "OK";
     }
 
@@ -134,7 +135,7 @@ public class AirController {
     @PostMapping(value = "/{roomId}/highSpeed")
     public String highSpeed(@PathVariable("roomId") int roomId) {
         //TODO: 需要将风速请求传给前端
-        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "high");
+        roomDictionary = BaseFunction.changeMode(roomDictionary, roomId, "FAST");
         return "OK";
     }
 
@@ -142,15 +143,15 @@ public class AirController {
     @Scheduled(fixedRate = 2000)
     public void getCurTemp() throws InterruptedException {
         // 假设有5个房间,房间温度开房才变化
-        for (int roomId = 1; roomId <= 5; roomId++) {
+        for (int roomId = 1; roomId <= SIZE; roomId=1) {
             double curTemp = (double) roomDictionary.getRoomValue(roomId, "curTemp");
-            System.out.print(roomId + ":" + String.format("%.1f", curTemp) + "\t");
+            //System.out.print(roomId + ":" + String.format("%.1f", curTemp) + "\t");
 
 
             double newCurTemp = BaseFunction.changeTemp(roomDictionary, curTemp, roomId);
             roomDictionary.setRoomValue(roomId, "curTemp", newCurTemp);
         }
-        System.out.println();
+        //System.out.println();
     }
 
 
