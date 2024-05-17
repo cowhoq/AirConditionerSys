@@ -18,18 +18,67 @@ public class FrontController {
     @Autowired
     SlaveService slaveService;
 
+    /**
+     * 获取从机状态
+     * @return
+     */
     @GetMapping("/status")
     public R<Status> getStatus() {
         return R.success(SlaveService.getStatus());
     }
 
     /**
+     * 从机开机
+     * @return
+     */
+    @PostMapping("/PowerOn")
+    public R<Status> PowerOn(){
+        SlaveService.setStatus(Status.ON);
+        slaveService.powerOn();
+        return R.success(SlaveService.getStatus());
+    }
+
+    /**
+     * 从机关机
+     * @return
+     */
+    @PostMapping("PowerOff")
+    public R<Status> PowerOff(){
+        SlaveService.setStatus(Status.OFF);
+        slaveService.powerOff();
+        return R.success(SlaveService.getStatus());
+    }
+    /**
      * 修改设定温度，升高一度
      */
-    @PostMapping(value = "/upSetTemp")
-    public String upSetTemp() {
-        //asyncService.setRequest(roomId, "up");
-        //TODO: 需要将设定温度传给前端,且设定温度不能超过限制
-        return "OK";
+    @PostMapping("/upSetTemp")
+    public R<Double> upSetTemp() {
+        Double Temp = SlaveService.getSetTemp();
+        Temp = Temp +1;
+        SlaveService.setSetTemp(Temp);
+        return R.success(Temp);
+    }
+
+    /**
+     * 降低一度
+     * @return
+     */
+    @PostMapping("/downSetTemp")
+    public R<Double> downSetTemp(){
+        Double Temp = SlaveService.getSetTemp();
+        Temp = Temp - 1;
+        SlaveService.setSetTemp(Temp);
+        return R.success(Temp);
+    }
+
+    /**
+     * 修改风速
+     * @param newSpeed
+     * @return
+     */
+    @PostMapping("/changeSpeed")
+    public R<String> changeSpeed(String newSpeed){
+        SlaveService.setMode(newSpeed);
+        return R.success(newSpeed);
     }
 }

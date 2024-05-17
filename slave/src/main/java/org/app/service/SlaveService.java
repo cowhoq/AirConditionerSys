@@ -3,16 +3,14 @@ package org.app.service;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.app.common.BaseFunction;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.app.common.R;
 import org.app.common.Status;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -32,11 +30,13 @@ public class SlaveService {
 
     public static final String BASE_URL = "http://10.29.22.40:8080";
 
+    @Setter
     @Getter
-    public static Status status; // 从机状态
+    public static Status status = Status.OFF; // 从机状态
 
     private static int second = 15;
 
+    @Getter
     private static Double curTemp = 30.0; // 当前温度
 
     @Getter
@@ -45,8 +45,7 @@ public class SlaveService {
 
     @Getter
     @Setter
-    private static String mode; // 设定风速
-
+    private static String mode = "FAST"; // 设定风速
 
     public Boolean powerOn() {
         var restTemplate = new RestTemplate();
@@ -62,7 +61,7 @@ public class SlaveService {
     public Boolean powerOff() {
         var restTemplate = new RestTemplate();
         var requestEntity = getRequestEntity(ROOM_ID, null, null, null);
-        var response = restTemplate.exchange(BaseFunction.Constants.BASE_URL + "/OffSlaverPower",
+        var response = restTemplate.exchange(BASE_URL + "/OffSlaverPower",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
         if (result != null)
@@ -73,27 +72,29 @@ public class SlaveService {
     public Boolean needWind() {
         var restTemplate = new RestTemplate();
         var requestEntity = getRequestEntity(ROOM_ID, null, null, null);
-        var response = restTemplate.exchange(BaseFunction.Constants.BASE_URL + "/sendAir",
+        var response = restTemplate.exchange(BASE_URL + "/sendAir",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
-        if (result != null)
+        if (result != null){
+            //log.info(String.valueOf(result.getData()));
             return (boolean) result.getData();
+        }
         return false;
     }
 
-    private HttpEntity<Map<String, String>> getRequestEntity(Long roomId, Double setTemp,
-                                                             Double curTemp, String mode) {
+    private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId, Double setTemp,
+                                                                       Double curTemp, String mode) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        var requestBody = new HashMap<String, String>();
+        var requestBody = new LinkedMultiValueMap<String, String>();
         if (roomId != null)
-            requestBody.put("roomId", String.valueOf(roomId));
+            requestBody.add("roomId", String.valueOf(roomId));
         if (setTemp != null)
-            requestBody.put("setTemp", String.valueOf(setTemp));
+            requestBody.add("setTemp", String.valueOf(setTemp));
         if (curTemp != null)
-            requestBody.put("curTemp", String.valueOf(curTemp));
+            requestBody.add("curTemp", String.valueOf(curTemp));
         if (mode != null)
-            requestBody.put("mode", mode);
+            requestBody.add("mode", mode);
         return new HttpEntity<>(requestBody, headers);
     }
 
@@ -116,8 +117,8 @@ public class SlaveService {
         }
     }
 
-    @Scheduled(fixedRate = 2000)
-    public void getCurTemp() {
+    @Scheduled(fixedRate = 1000)
+    public void changeCurTemp() {
         if (curTemp <= NOW_TEMP)
             curTemp += CHANGE_TEMP;
 

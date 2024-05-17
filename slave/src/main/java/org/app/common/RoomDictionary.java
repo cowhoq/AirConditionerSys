@@ -8,7 +8,7 @@ import java.util.Map;
  * @date 2024/5/9 17:08
  */
 public class RoomDictionary {
-    private final Map<Integer, Map<String, Object>> roomDictionary;
+/*    private final Map<Integer, Map<String, Object>> roomDictionary;
 
     public RoomDictionary() {
         roomDictionary = new HashMap<>();
@@ -43,5 +43,5 @@ public class RoomDictionary {
             System.out.println("Room not found!");
             return null;
         }
-    }
+    }*/
 }

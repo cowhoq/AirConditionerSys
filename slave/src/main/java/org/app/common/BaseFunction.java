@@ -9,8 +9,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import static org.app.controller.AirController.roomDictionary;
-
 /**
  * @author hbw
  * @date 2024/5/9 18:25
@@ -18,7 +16,7 @@ import static org.app.controller.AirController.roomDictionary;
 @Slf4j
 @Service
 public class BaseFunction {
-    private static Double UPTEMP = 0.2;  // 房间每秒涨0.4°C
+   /* private static Double UPTEMP = 0.2;  // 房间每秒涨0.4°C
     private static Double highSpeed = 1.0;  // 高风速每分钟变化1度
     private static Double midSpeed = 0.8;  // 中风速每分钟变化0.8度
     private static Double lowSpeed = 0.6;  // 低风速每分钟变化0.6度
@@ -217,7 +215,7 @@ public class BaseFunction {
         double newCurTemp = BaseFunction.changeTemp(roomDictionary, curTemp, roomId);
         roomDictionary.setRoomValue(roomId, "curTemp", newCurTemp);
         //System.out.println();
-    }
+    }*/
 }
 
 
