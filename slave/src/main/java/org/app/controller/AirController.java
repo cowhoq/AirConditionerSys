@@ -1,17 +1,11 @@
 package org.app.controller;
+
 import lombok.extern.slf4j.Slf4j;
-//import org.app.common.R;
-import org.app.service.AsyncService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.app.common.R;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.app.common.BaseFunction;
-import org.app.common.RoomDictionary;
+
 import javax.annotation.PostConstruct;
 
 /**
@@ -21,14 +15,6 @@ import javax.annotation.PostConstruct;
 @Slf4j
 @RestController()
 public class AirController {
-
-    @Autowired
-    private AsyncService asyncService;
-
-    public static RoomDictionary roomDictionary = new RoomDictionary();
-    public static Integer User_roomId= 0;
-
-
     @PostConstruct
     public void init() {
         roomDictionary.addRoom(0);
@@ -36,6 +22,7 @@ public class AirController {
 
     /**
      * 开新房间，将从机状态由 empty 改为 off
+     *
      * @return
      */
     @GetMapping("/getNewRoom/{roomId}")
@@ -48,6 +35,7 @@ public class AirController {
 
     /**
      * 获取从机状态
+     *
      * @return 返回从机状态
      */
     @GetMapping("/{roomId}/status")
@@ -58,6 +46,7 @@ public class AirController {
 
     /**
      * 切换从机状态
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/toggle")
@@ -66,21 +55,21 @@ public class AirController {
         Object acStatus = roomDictionary.getRoomValue(roomId, "acStatus");
 
         if (acStatus.equals("on")) {
-            if(BaseFunction.PowerOff((roomId)))
+            if (BaseFunction.PowerOff((roomId)))
                 acStatus = "off";
-        }else
-        {
-            if(BaseFunction.PowerOn(roomDictionary,roomId))
+        } else {
+            if (BaseFunction.PowerOn(roomDictionary, roomId))
                 acStatus = "on"; // 开机后将房间温度显示到控制面板上
         }
         roomDictionary.setRoomValue(roomId, "acStatus", acStatus);
         return roomDictionary.getRoomValue(roomId, "acStatus");
     }
 
-        // 上一次请求
+    // 上一次请求
 
     /**
      * 修改设定温度，升高一度
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/upSetTemp")
@@ -92,6 +81,7 @@ public class AirController {
 
     /**
      * 修改设定温度，降低一度
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/downSetTemp")
@@ -103,6 +93,7 @@ public class AirController {
 
     /**
      * 修改风速请求：低速
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/lowSpeed")
@@ -114,6 +105,7 @@ public class AirController {
 
     /**
      * 修改风速请求：中速
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/midSpeed")
@@ -125,6 +117,7 @@ public class AirController {
 
     /**
      * 修改风速请求：高速
+     *
      * @return 返回从机状态
      */
     @PostMapping(value = "/{roomId}/highSpeed")
@@ -135,10 +128,8 @@ public class AirController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestParam int roomId,
-                                      @RequestParam String User,
-                                      @RequestParam String Password){
-        if(BaseFunction.Cheak_login(roomId,User,Password)){
+    public R<String> login(Long roomId, String User, String Password) {
+        if (BaseFunction.Cheak_login(roomId, User, Password)) {
             User_roomId = roomId;
             roomDictionary.addRoom(roomId);
             return ResponseEntity.ok().build();
