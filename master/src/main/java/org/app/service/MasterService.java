@@ -179,7 +179,7 @@ public class MasterService {
                 return true;
             }
 
-            if (oldRequest.getStopTemp() != newRequest.getStopTemp()) {
+            if (!Objects.equals(oldRequest.getStopTemp(), newRequest.getStopTemp())) {
                 if (!checkRequestTemp(newRequest)) {
                     requestList.add(oldRequest);
                     return false;
@@ -250,7 +250,7 @@ public class MasterService {
      * <p>
      * 目前的调度策略为时间片轮询, 轮询时长为 1 分钟
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRateString = "${master.fixedRate}")
     public void schedule() {
         // 交给 spring boot 管理后, 主机没有启动(各项参数未初始化)就进行调度, 需要判断一下
         if (workMode.equals(WorkMode.OFF))

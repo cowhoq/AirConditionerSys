@@ -20,10 +20,10 @@ public class Request {
     private LocalDateTime stopTime;
 
     @TableField(value = "start_temperature")
-    private double startTemp;
+    private Integer startTemp;
 
     @TableField(value = "stop_temperature")
-    private double stopTemp;
+    private Integer stopTemp;
 
     private String fanSpeed;
 

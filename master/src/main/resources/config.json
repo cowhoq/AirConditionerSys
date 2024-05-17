@@ -1,11 +1,11 @@
 {
   "heating-default-temperature": [
-    25,
-    30
+    2500,
+    3000
   ],
   "refrigeration-default-temperature": [
-    18,
-    25
+    1800,
+    2500
   ],
   "fan-cost": {
     "SLOW": 0.8,

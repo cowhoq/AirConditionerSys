@@ -28,8 +28,8 @@ CREATE TABLE request
     room_id           bigint             NOT NULL,
     start_time        DATETIME           NOT NULL,
     stop_time         DATETIME           NOT NULL,
-    start_temperature double             NOT NULL,
-    stop_temperature  double             NOT NULL,
+    start_temperature int                NOT NULL,
+    stop_temperature  int                NOT NULL,
     fan_speed         VARCHAR(6)         NOT NULL DEFAULT 'MEDIUM', -- 风速等级
     total_fee         decimal(10, 2)     NOT NULL
 );

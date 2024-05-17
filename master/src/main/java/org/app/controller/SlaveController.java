@@ -84,7 +84,7 @@ public class SlaveController {
      * 接收从机请求, 从机给出的每个参数都不应为 null
      */
     @PostMapping("/OnSlaverPower")
-    public R<String> slaveRequest(Long roomId, double setTemp, double curTemp, String mode) {
+    public R<String> slaveRequest(Long roomId, Integer setTemp, Integer curTemp, String mode) {
         log.info("从机请求参数: {}, {}, {}, {}", roomId, setTemp, curTemp, mode);
         var request = new Request();
         request.setRoomId(roomId);
