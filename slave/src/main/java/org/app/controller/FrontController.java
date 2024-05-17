@@ -20,7 +20,6 @@ public class FrontController {
 
     /**
      * 获取从机状态
-     * @return
      */
     @GetMapping("/status")
     public R<Status> getStatus() {
@@ -29,56 +28,46 @@ public class FrontController {
 
     /**
      * 从机开机
-     * @return
      */
     @PostMapping("/PowerOn")
-    public R<Status> PowerOn(){
-        SlaveService.setStatus(Status.ON);
+    public R<Status> powerOn() {
+        slaveService.setStatus(Status.ON);
         slaveService.powerOn();
-        return R.success(SlaveService.getStatus());
+        return R.success(slaveService.getStatus());
     }
 
     /**
      * 从机关机
-     * @return
      */
     @PostMapping("PowerOff")
-    public R<Status> PowerOff(){
+    public R<Status> powerOff() {
         SlaveService.setStatus(Status.OFF);
         slaveService.powerOff();
         return R.success(SlaveService.getStatus());
     }
+
     /**
      * 修改设定温度，升高一度
      */
     @PostMapping("/upSetTemp")
-    public R<Double> upSetTemp() {
-        Double Temp = SlaveService.getSetTemp();
-        Temp = Temp +1;
-        SlaveService.setSetTemp(Temp);
-        return R.success(Temp);
+    public R<Integer> upSetTemp() {
+        return R.success(slaveService.upSetTemp(100));
     }
 
     /**
      * 降低一度
-     * @return
      */
     @PostMapping("/downSetTemp")
-    public R<Double> downSetTemp(){
-        Double Temp = SlaveService.getSetTemp();
-        Temp = Temp - 1;
-        SlaveService.setSetTemp(Temp);
-        return R.success(Temp);
+    public R<Integer> downSetTemp() {
+        return R.success(slaveService.upSetTemp(-100));
     }
 
     /**
      * 修改风速
-     * @param newSpeed
-     * @return
      */
     @PostMapping("/changeSpeed")
-    public R<String> changeSpeed(String newSpeed){
-        SlaveService.setMode(newSpeed);
+    public R<String> changeSpeed(String newSpeed) {
+        slaveService.setMode(newSpeed);
         return R.success(newSpeed);
     }
 }

@@ -1,6 +1,5 @@
 package org.app.service;
 
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,44 +11,77 @@ import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * @author zfq, czl
+ */
 @Slf4j
 @Service
 public class SlaveService {
     @Setter
     public static Long ROOM_ID = null;
 
-    private static final Double CHANGE_TEMP = 0.2;  // 房间每秒变化0.4°C
+    private static final Integer CHANGE_TEMP = 20;  // 房间每秒变化0.4°C
 
-    private static final Double HIGH_SPEED = 1.0;  // 高风速每分钟变化1度
+    private static final Integer HIGH_SPEED = 100;  // 高风速每分钟变化1度
 
-    private static final Double MID_SPEED = 0.8;  // 中风速每分钟变化0.8度
+    private static final Integer MID_SPEED = 80;  // 中风速每分钟变化0.8度
 
-    private static final Double LOW_SPEED = 0.6;  // 低风速每分钟变化0.6度
+    private static final Integer LOW_SPEED = 60;  // 低风速每分钟变化0.6度
 
-    private static final Double NOW_TEMP = 40.0; // 室外温度, 室内温度会向其靠拢
+    private static final Integer NOW_TEMP = 4000; // 室外温度, 室内温度会向其靠拢
 
     public static final String BASE_URL = "http://10.29.22.40:8080";
 
-    @Setter
-    @Getter
-    public static Status status = Status.OFF; // 从机状态
-
     private static int second = 15;
 
-    @Getter
-    private static Double curTemp = 30.0; // 当前温度
+    public static AtomicReference<Status> status = new AtomicReference<>(Status.OFF); // 从机状态
 
-    @Getter
-    @Setter
-    private static Double setTemp = 24.0; // 设定温度
+    private final AtomicInteger curTemp = new AtomicInteger(3000); // 当前温度
 
-    @Getter
-    @Setter
-    private static String mode = "FAST"; // 设定风速
+    private final AtomicInteger setTemp = new AtomicInteger(2400); // 设定温度
+
+
+    private final AtomicReference<String> mode = new AtomicReference<>("FAST"); // 设定风速
+
+    public static void setStatus(Status _status) {
+        status.set(_status);
+    }
+
+    public static Status getStatus() {
+        return status.get();
+    }
+
+    public void setMode(String _mode) {
+        mode.set(_mode);
+    }
+
+    public String getMode() {
+        return mode.get();
+    }
+
+    public void setSetTemp(Integer _setTemp) {
+        setTemp.set(_setTemp);
+    }
+
+    public Integer getSetTemp() {
+        return setTemp.get();
+    }
+
+    public Integer upSetTemp(int temp) {
+        return setTemp.addAndGet(temp);
+    }
+
+    public Integer getCurTemp() {
+        return curTemp.get();
+    }
 
     public Boolean powerOn() {
         var restTemplate = new RestTemplate();
-        var requestEntity = getRequestEntity(ROOM_ID, setTemp, curTemp, mode);
+        var requestEntity
+                = getRequestEntity(ROOM_ID, setTemp.get(), curTemp.get(), mode.get());
         var response = restTemplate.exchange(BASE_URL + "/OnSlaverPower",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
@@ -60,7 +92,8 @@ public class SlaveService {
 
     public Boolean powerOff() {
         var restTemplate = new RestTemplate();
-        var requestEntity = getRequestEntity(ROOM_ID, null, null, null);
+        var requestEntity
+                = getRequestEntity(ROOM_ID, null, null, null);
         var response = restTemplate.exchange(BASE_URL + "/OffSlaverPower",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
@@ -71,19 +104,20 @@ public class SlaveService {
 
     public Boolean needWind() {
         var restTemplate = new RestTemplate();
-        var requestEntity = getRequestEntity(ROOM_ID, null, null, null);
+        var requestEntity
+                = getRequestEntity(ROOM_ID, null, null, null);
         var response = restTemplate.exchange(BASE_URL + "/sendAir",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
-        if (result != null){
+        if (result != null) {
             //log.info(String.valueOf(result.getData()));
             return (boolean) result.getData();
         }
         return false;
     }
 
-    private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId, Double setTemp,
-                                                                       Double curTemp, String mode) {
+    private HttpEntity<MultiValueMap<String, String>>
+    getRequestEntity(Long roomId, Integer setTemp, Integer curTemp, String mode) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         var requestBody = new LinkedMultiValueMap<String, String>();
@@ -99,12 +133,12 @@ public class SlaveService {
     }
 
 
-    private Boolean checkPowerOff(Double curTemp, Double speed) {
-        return (curTemp > setTemp && curTemp - speed <= setTemp) ||
-                (curTemp < setTemp && curTemp + speed >= setTemp);
+    private Boolean checkPowerOff(Integer curTemp, Integer speed) {
+        return (curTemp > setTemp.get() && curTemp - speed <= setTemp.get()) ||
+                (curTemp < setTemp.get() && curTemp + speed >= setTemp.get());
     }
 
-    private Double getSpeed(String mode) {
+    private Integer getSpeed(String mode) {
         switch (mode) {
             case "SLOW":
                 return LOW_SPEED;
@@ -117,39 +151,41 @@ public class SlaveService {
         }
     }
 
+
     @Scheduled(fixedRate = 1000)
     public void changeCurTemp() {
-        if (curTemp <= NOW_TEMP)
-            curTemp += CHANGE_TEMP;
+        if (curTemp.get() <= NOW_TEMP)
+            curTemp.addAndGet(CHANGE_TEMP);
 
-        if (curTemp >= NOW_TEMP)
-            curTemp -= CHANGE_TEMP;
+        if (curTemp.get() >= NOW_TEMP)
+            curTemp.addAndGet(-CHANGE_TEMP);
 
         // 如果是自动停机, 则等待 15 下(因为计数单位不一定是秒, 所以使用 "下" 这个字)
-        if (status.equals(Status.AUTO_OFF)) {
+        if (status.get().equals(Status.AUTO_OFF)) {
             second--;
             if (second == 0 && powerOn()) {
-                status = Status.ON;
+                status.set(Status.ON);
                 powerOn(); // 发送新的请求
             }
         }
 
-        if (status.equals(Status.ON)) {
+        if (status.get().equals(Status.ON)) {
             // 主机允许送风
-            if (needWind()) {
+            if (needWind() && curTemp.get() != setTemp.get()) {
                 // 根据设定的风速获取温度变化速度
-                Double speed = getSpeed(mode);
-                if (!curTemp.equals(setTemp)) {
-                    curTemp += (curTemp > setTemp) ? -speed : speed;
+                var speed = getSpeed(mode.get());
+                var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
+                curTemp.addAndGet(adjustment);
 
-                    // 检查是否可以关机
-                    if (checkPowerOff(curTemp, speed) && powerOff()) {
-                        status = Status.AUTO_OFF;
-                        second = 15; // 等待 15 下才能再开机
-                    }
+                // 检查是否可以关机
+                if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
+                    status.set(Status.AUTO_OFF);
+                    second = 15; // 等待 15 下才能再开机
                 }
+
             }
         }
     }
+
 }
 
