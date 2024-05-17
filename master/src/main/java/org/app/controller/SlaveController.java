@@ -5,6 +5,8 @@ import org.app.common.R;
 import org.app.entity.Request;
 import org.app.entity.WorkStatus;
 import org.app.service.MasterService;
+import org.app.service.RoomService;
+import org.app.service.UserService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -21,6 +23,49 @@ public class SlaveController {
     @Autowired
     private MasterService masterService;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private RoomService roomService;
+
+    /**
+     * 从机登录请求
+     */
+    @PostMapping("/slave-login")
+    public R<String> login(String name, String password, Long roomId) {
+        log.info("从机登录({}), name={}, password={}", roomId, name, password);
+        if (userService.login(name, password))
+            return R.error("用户名或密码错误");
+        else {
+            var room = roomService.getById(roomId);
+            if (room == null)
+                return R.error("你不是这个房间的主人");
+            if (room.getInuse())
+                return R.error("房间正在使用");
+            room.setInuse(true);
+            roomService.updateById(room);
+            return R.success("开启成功");
+        }
+    }
+
+    /**
+     * 从机关机请求
+     */
+    @PostMapping("/slave-logout")
+    public R<String> logout(Long roomId) {
+        var room = roomService.getById(roomId);
+        if (room == null)
+            return R.error("关机失败");
+        if (room.getInuse()) {
+            room.setInuse(false);
+            roomService.updateById(room);
+            // 删除请求队列中从机的请求
+            this.slavePowerOff(roomId);
+            return R.success("关机成功");
+        }
+        return R.error("关机失败");
+    }
 
     /**
      * 返回主机的工作模式和工作温度
@@ -52,7 +97,9 @@ public class SlaveController {
             return R.error(null);
     }
 
-
+    /**
+     * 从机暂停送风
+     */
     @PostMapping("/OffSlaverPower")
     public R<Boolean> slavePowerOff(Long roomId) {
         log.info("从机请求关闭: {}", roomId);
@@ -69,6 +116,8 @@ public class SlaveController {
     @PostMapping("/sendAir")
     public R<Boolean> sendAir(Long roomId) {
         log.info("收到来自从机的查询: {}", roomId);
+        if (roomId == null)
+            return R.success(false);
         return R.success(masterService.contains(roomId));
     }
 }
