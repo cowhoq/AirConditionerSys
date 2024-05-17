@@ -152,7 +152,7 @@ public class SlaveService {
     }
 
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 3000)
     public void changeCurTemp() {
         if (curTemp.get() <= NOW_TEMP)
             curTemp.addAndGet(CHANGE_TEMP);
@@ -165,7 +165,6 @@ public class SlaveService {
             second--;
             if (second == 0 && powerOn()) {
                 status.set(Status.ON);
-                powerOn(); // 发送新的请求
             }
         }
 
@@ -185,6 +184,7 @@ public class SlaveService {
 
             }
         }
+        log.info(curTemp+";"+setTemp+";"+status+";"+second);
     }
 
 }

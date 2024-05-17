@@ -34,14 +34,30 @@ public class LoginController {
         return R.error("登录失败");
     }
 
+    /**
+     * 登出，只需要房间号！
+     */
+    @PostMapping("logout")
+    public R<String> logout(Long roomId){
+        var restTemplate = new RestTemplate();
+        var requestEntity = getRequestEntity(roomId, null,null);
+        var response = restTemplate.exchange(SlaveService.BASE_URL + "/slave-logout",
+                HttpMethod.POST, requestEntity, R.class);
+        var r = response.getBody();
+        if (r != null && r.getCode() == 1) {
+            SlaveService.setROOM_ID(null);
+            return R.success("登出成功");
+        }
+        return R.success("登出失败");
+    }
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId, String name, String password) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         var requestBody = new LinkedMultiValueMap<String,String>();
         requestBody.add("roomId", String.valueOf(roomId));
-        requestBody.add("name", name);
-        requestBody.add("password", password);
+        if(name != null) requestBody.add("name", name);
+        if (password != null) requestBody.add("password", password);
         return new HttpEntity<>(requestBody, headers);
     }
 }
