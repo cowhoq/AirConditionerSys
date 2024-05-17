@@ -7,9 +7,12 @@ import org.app.entity.WorkStatus;
 import org.app.service.MasterService;
 import org.app.service.RoomService;
 import org.app.service.UserService;
+import org.graalvm.collections.Pair;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+
+import java.math.BigDecimal;
 
 /**
  * 控制器类，管理从属设备的请求
@@ -119,5 +122,9 @@ public class SlaveController {
         if (roomId == null)
             return R.success(false);
         return R.success(masterService.contains(roomId));
+    }
+    @PostMapping("/slaveFee")
+    public R<Pair<BigDecimal, BigDecimal>> slaveFee(Long roomId){
+        return R.success(masterService.getEnergyAndFee(roomId));
     }
 }

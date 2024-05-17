@@ -4,10 +4,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.common.Status;
 import org.app.service.SlaveService;
+import org.graalvm.collections.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
 
 /**
  * @author zfq
@@ -69,5 +79,27 @@ public class FrontController {
     public R<String> changeSpeed(String newSpeed) {
         slaveService.setMode(newSpeed);
         return R.success(newSpeed);
+    }
+
+    @PostMapping("/getFee")
+    public R<Pair<BigDecimal, BigDecimal>> getFee(Long roomId){
+        var restTemplate = new RestTemplate();
+        var requestEntity = getRequestEntity(roomId);
+        var response = restTemplate.exchange(SlaveService.BASE_URL + "/slaveFee",
+                HttpMethod.POST, requestEntity, R.class);
+        var r = response.getBody();
+        if (r != null && r.getCode() == 1) {
+            return r;
+        }
+        return r;
+    }
+
+    private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId) {
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        var requestBody = new LinkedMultiValueMap<String,String>();
+        requestBody.add("roomId", String.valueOf(roomId));
+        return new HttpEntity<>(requestBody, headers);
     }
 }

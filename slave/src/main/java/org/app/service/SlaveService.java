@@ -2,6 +2,7 @@ package org.app.service;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -23,15 +24,16 @@ public class SlaveService {
     @Setter
     public static Long ROOM_ID = null;
 
-    private static final Integer CHANGE_TEMP = 20;  // 房间每秒变化0.4°C
+    public static boolean Cheak_health = true;
+    private static final Integer CHANGE_TEMP = 5;  // 房间每秒变化0.4°C
 
-    private static final Integer HIGH_SPEED = 100;  // 高风速每分钟变化1度
+    private static final Integer HIGH_SPEED = 15;  // 高风速每分钟变化1度
 
-    private static final Integer MID_SPEED = 80;  // 中风速每分钟变化0.8度
+    private static final Integer MID_SPEED = 13;  // 中风速每分钟变化0.8度
 
-    private static final Integer LOW_SPEED = 60;  // 低风速每分钟变化0.6度
+    private static final Integer LOW_SPEED = 11;  // 低风速每分钟变化0.6度
 
-    private static final Integer NOW_TEMP = 4000; // 室外温度, 室内温度会向其靠拢
+    private static final Integer NOW_TEMP = 2800; // 室外温度, 室内温度会向其靠拢
 
     public static final String BASE_URL = "http://10.29.22.40:8080";
 
@@ -56,6 +58,7 @@ public class SlaveService {
 
     public void setMode(String _mode) {
         mode.set(_mode);
+        powerOn();
     }
 
     public String getMode() {
@@ -151,8 +154,7 @@ public class SlaveService {
         }
     }
 
-
-    @Scheduled(fixedRate = 3000)
+    @Scheduled(fixedRate = 1000)
     public void changeCurTemp() {
         if (curTemp.get() <= NOW_TEMP)
             curTemp.addAndGet(CHANGE_TEMP);
@@ -162,15 +164,15 @@ public class SlaveService {
 
         // 如果是自动停机, 则等待 15 下(因为计数单位不一定是秒, 所以使用 "下" 这个字)
         if (status.get().equals(Status.AUTO_OFF)) {
-            second--;
-            if (second == 0 && powerOn()) {
+             second--;
+            if (second <= 0 && powerOn()) {
                 status.set(Status.ON);
             }
         }
 
         if (status.get().equals(Status.ON)) {
             // 主机允许送风
-            if (needWind() && curTemp.get() != setTemp.get()) {
+            if (needWind()) {
                 // 根据设定的风速获取温度变化速度
                 var speed = getSpeed(mode.get());
                 var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
@@ -181,11 +183,25 @@ public class SlaveService {
                     status.set(Status.AUTO_OFF);
                     second = 15; // 等待 15 下才能再开机
                 }
-
+                log.info(curTemp+";"+setTemp+";"+status+";"+second);
+            }else {
+                log.info("主机关机或断开连接！");
             }
         }
-        log.info(curTemp+";"+setTemp+";"+status+";"+second);
+
     }
 
+    /*@Scheduled(fixedRate = 1000)
+    public void cheak(){
+        var restTemplate = new RestTemplate();
+        var response = restTemplate.exchange(SlaveService.BASE_URL + "/health",
+                HttpMethod.GET, null, R.class);
+        var r = response.getBody();
+        if(r == null){
+            log.info("wrong");
+        }
+        changeCurTemp();
+    }
+*/
 }
 
