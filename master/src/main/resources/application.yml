@@ -16,4 +16,11 @@ mybatis-plus:
     global-config:
         db-config:
             id-type: ASSIGN_ID
-master.fixedRate: 3000
+master:
+    fixedRate: 1000
+    TEST: true
+    EXPIRY_DURATION: 5000
+    pollingInterval: 500
+
+slave:
+    defaultTemp: 2200

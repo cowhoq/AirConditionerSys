@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @ResponseBody
 @ControllerAdvice(annotations = {RestController.class, Controller.class})
 public class GlobalExceptionHandler {
+    /**
+     * 请求时主机未开机, 状态错误
+     */
     @ExceptionHandler(IllegalStateException.class)
     public R<String> exceptionHandler(IllegalStateException e) {
         var message = e.getMessage();
@@ -24,5 +27,15 @@ public class GlobalExceptionHandler {
             return R.error("主机未启动");
         else
             return R.error(message);
+    }
+
+    /**
+     * 参数错误
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public R<String> exceptionHandler(IllegalArgumentException e) {
+        var message = e.getMessage();
+        log.error(e.getMessage());
+        return R.error(message);
     }
 }

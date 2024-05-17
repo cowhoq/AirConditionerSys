@@ -1,10 +1,11 @@
 package org.app.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.app.common.CheckWorkMode;
+import org.app.aop.CheckWorkMode;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
 import org.graalvm.collections.Pair;
@@ -60,8 +61,18 @@ public class MasterService {
     private Set<Long> sendAirRoomId;
 
     @Setter
+    @Value("${master.TEST}")
     private Boolean TEST = false;
 
+
+    @PostConstruct
+    public void init() {
+        // 如果时测试模式时, 默认是制冷模式,
+        // 免去在没有前端界面的情况下, 通过浏览器启动
+        // 但是这样就无法获在启动时传递工作参数
+        if (TEST)
+            powerOn(null, null);
+    }
 
     /**
      * 获取默认参数
@@ -90,6 +101,8 @@ public class MasterService {
      * @return 开机成功返回 true, 否则返回 false
      */
     public Boolean powerOn(WorkMode workMode, Pair<Integer, Integer> range) {
+        if (this.workMode != WorkMode.OFF)
+            return false;
         getDefaultParams();
         this.workMode = WorkMode.REFRIGERATION;
         this.range = refrigerationDefaultTemp;
@@ -162,33 +175,15 @@ public class MasterService {
             requestList.add(newRequest);
             return true;
         } else {
-            // 改变风速
-            if (!Objects.equals(oldRequest.getFanSpeed(), newRequest.getFanSpeed())) {
-                /*
-                 * 风速改变的同时, 温度也可能改变
-                 * 但是温度改变不需要检查是否和 oldRequest 相同, 因为不影响计费结果
-                 * 只需要检查一下是否合法即可
-                 */
-                if (!checkRequestTemp(newRequest)) {
-                    requestList.add(oldRequest);
-                    return false;
-                }
+            if (checkRequestTemp(newRequest)) { // 温度校验不合格
                 calcFeeAndSave(oldRequest);
                 newRequest.setStartTime(LocalDateTime.now());
                 requestList.add(newRequest);
                 return true;
-            }
-
-            if (!Objects.equals(oldRequest.getStopTemp(), newRequest.getStopTemp())) {
-                if (!checkRequestTemp(newRequest)) {
-                    requestList.add(oldRequest);
-                    return false;
-                }
-                oldRequest.setStopTemp(newRequest.getStopTemp());
+            } else {
                 requestList.add(oldRequest);
-                return true;
+                return false;
             }
-            return false;
         }
     }
 

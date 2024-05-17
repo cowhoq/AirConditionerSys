@@ -1,12 +1,15 @@
 package org.app.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.app.aop.CheckLogin;
 import org.app.common.R;
 import org.app.entity.Request;
 import org.app.entity.WorkStatus;
 import org.app.service.MasterService;
 import org.app.service.RoomService;
+import org.app.service.SlaveStatusService;
 import org.app.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.graalvm.collections.Pair;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +35,24 @@ public class SlaveController {
     @Autowired
     private RoomService roomService;
 
+    @Autowired
+    private SlaveStatusService slaveStatusService;
+
+    @Value("${slave.defaultTemp}")
+    private Integer slaveDefaultTemp;
+
     /**
      * 从机登录请求
+     *
+     * @return 登录成功后返回从机默认工作温度, 否则返回错误信息
      */
     @PostMapping("/slave-login")
-    public R<String> login(String name, String password, Long roomId) {
+    public R<Integer> login(String name, String password, Long roomId) {
+        if (name == null || password == null || roomId == null)
+            throw new IllegalArgumentException("登录参数错误");
+
         log.info("从机登录({}), name={}, password={}", roomId, name, password);
-        if (userService.login(name, password))
+        if (!userService.login(name, password))
             return R.error("用户名或密码错误");
         else {
             var room = roomService.getById(roomId);
@@ -48,23 +62,26 @@ public class SlaveController {
                 return R.error("房间正在使用");
             room.setInuse(true);
             roomService.updateById(room);
-            return R.success("开启成功");
+            slaveStatusService.registerOrUpdateRegisteredId(roomId);
+            return R.success(slaveDefaultTemp);
         }
     }
 
     /**
      * 从机关机请求
      */
+    @CheckLogin
     @PostMapping("/slave-logout")
     public R<String> logout(Long roomId) {
         var room = roomService.getById(roomId);
         if (room == null)
-            return R.error("关机失败");
+            return R.error("关机失败, roomId 不存在");
         if (room.getInuse()) {
             room.setInuse(false);
             roomService.updateById(room);
             // 删除请求队列中从机的请求
             this.slavePowerOff(roomId);
+            slaveStatusService.registerOrUpdateRegisteredId(roomId);
             return R.success("关机成功");
         }
         return R.error("关机失败");
@@ -73,6 +90,7 @@ public class SlaveController {
     /**
      * 返回主机的工作模式和工作温度
      */
+    @CheckLogin
     @GetMapping(path = "/getMasterWork", produces = MediaType.APPLICATION_JSON_VALUE)
     public R<WorkStatus> getMasterWorkParams() {
         log.info("getMasterWorkParams");
@@ -86,6 +104,7 @@ public class SlaveController {
     /**
      * 接收从机请求, 从机给出的每个参数都不应为 null
      */
+    @CheckLogin
     @PostMapping("/OnSlaverPower")
     public R<String> slaveRequest(Long roomId, Integer setTemp, Integer curTemp, String mode) {
         log.info("从机请求参数: {}, {}, {}, {}", roomId, setTemp, curTemp, mode);
@@ -103,10 +122,15 @@ public class SlaveController {
     /**
      * 从机暂停送风
      */
+    @CheckLogin
     @PostMapping("/OffSlaverPower")
     public R<Boolean> slavePowerOff(Long roomId) {
         log.info("从机请求关闭: {}", roomId);
-        return R.success(masterService.slavePowerOff(roomId));
+        if (masterService.slavePowerOff(roomId)) {
+            slaveStatusService.registerOrUpdateRegisteredId(roomId);
+            return R.success(true);
+        }
+        return R.success(false);
     }
 
 
@@ -121,8 +145,13 @@ public class SlaveController {
         log.info("收到来自从机的查询: {}", roomId);
         if (roomId == null)
             return R.success(false);
+        slaveStatusService.registerOrUpdateRegisteredId(roomId);
         return R.success(masterService.contains(roomId));
     }
+
+    /**
+     * 获取当前从机请求费用
+     */
     @PostMapping("/slaveFee")
     public R<Pair<BigDecimal, BigDecimal>> slaveFee(Long roomId){
         return R.success(masterService.getEnergyAndFee(roomId));

@@ -1,4 +1,4 @@
-package org.app.common;
+package org.app.aop;
 
 import org.app.entity.WorkMode;
 import org.app.service.MasterService;
@@ -13,7 +13,7 @@ public class WorkModeAspect {
     @Autowired
     MasterService masterService;
 
-    @Pointcut("@annotation(org.app.common.CheckWorkMode)")
+    @Pointcut("@annotation(org.app.aop.CheckWorkMode)")
     public void cut() {
     }
 
