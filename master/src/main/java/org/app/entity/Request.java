@@ -15,6 +15,8 @@ public class Request {
 
     private Long roomId;
 
+    private Long userId;
+
     private LocalDateTime startTime;
 
     private LocalDateTime stopTime;
