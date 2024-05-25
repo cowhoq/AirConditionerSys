@@ -175,7 +175,7 @@ public class MasterService {
             requestList.add(newRequest);
             return true;
         } else {
-            if (checkRequestTemp(newRequest)) { // 温度校验不合格
+            if (checkRequestTemp(newRequest)) { // 温度校验合格
                 calcFeeAndSave(oldRequest);
                 newRequest.setStartTime(LocalDateTime.now());
                 requestList.add(newRequest);
@@ -193,7 +193,7 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 获取的请求
      */
-    private Request getRequest(Long roomId) {
+    public Request getRequest(Long roomId) {
         var indexOpt = IntStream.range(0, requestList.size()).
                 filter(i -> Objects.equals(requestList.get(i).getRoomId(), roomId)).
                 findFirst();
@@ -203,7 +203,6 @@ public class MasterService {
             request = requestList.remove(indexOpt.getAsInt());
         return request;
     }
-
 
     /**
      * 计算一个请求的总花费并写入数据库
@@ -238,8 +237,12 @@ public class MasterService {
         calcFeeAndSave(request);
         return true;
     }
-
-
+    /**
+     * 获取所有从机状态
+     */
+    public List<Request> getSlaveList(){
+        return requestList;
+    }
     /**
      * 对请求队列中的请求进行调度
      * <p>
@@ -273,10 +276,8 @@ public class MasterService {
         if (TEST)
             log.info("本次调度请求有: {}", sendAirRoomId);
     }
-
-
     /**
-     * 供从机调用, 实时获取本次请求所需要的消耗的能量和所需支付的金额
+     * 供从机和前端调用, 实时获取本次请求所需要的消耗的能量和所需支付的金额
      * <p>
      * 能量和金额都是使用了 `BigDecimal` 类, 可能不太方便.
      * TODO: 后续可能会因此调整为 `Double` 类型

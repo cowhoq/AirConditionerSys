@@ -38,7 +38,6 @@ public class SlaveStatusService {
     public Boolean isRegistered(Long roomId) {
         return registeredId.containsKey(roomId);
     }
-
     /**
      * 检查从机的注册状态
      */
@@ -56,4 +55,5 @@ public class SlaveStatusService {
             }
         }
     }
+
 }
