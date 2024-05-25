@@ -19,14 +19,14 @@ import org.springframework.web.client.RestTemplate;
 public class LoginController {
     @Autowired
     SlaveService slaveService;
+
     /**
      * 登录，需要房间 号！
-     *
      */
     @PostMapping("/login")
     public R login(Long roomId, String name, String password) {
         var restTemplate = new RestTemplate();
-        log.info(roomId+name+password);
+        log.info(roomId + name + password);
         var requestEntity = getRequestEntity(roomId, name, password);
         var response = restTemplate.exchange(SlaveService.BASE_URL + "/slave-login",
                 HttpMethod.POST, requestEntity, R.class);
@@ -37,7 +37,7 @@ public class LoginController {
             slaveService.setSetTemp((Integer) r.getData());
             return r;
         }
-        if(r != null)
+        if (r != null)
             return r;
         return R.error("登录失败");
     }
@@ -46,9 +46,9 @@ public class LoginController {
      * 登出，只需要房间号！
      */
     @PostMapping("logout")
-    public R logout(Long roomId){
+    public R logout(Long roomId) {
         var restTemplate = new RestTemplate();
-        var requestEntity = getRequestEntity(roomId, null,null);
+        var requestEntity = getRequestEntity(roomId, null, null);
         var response = restTemplate.exchange(SlaveService.BASE_URL + "/slave-logout",
                 HttpMethod.POST, requestEntity, R.class);
         var r = response.getBody();
@@ -58,13 +58,14 @@ public class LoginController {
         }
         return r;
     }
+
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId, String name, String password) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        var requestBody = new LinkedMultiValueMap<String,String>();
+        var requestBody = new LinkedMultiValueMap<String, String>();
         requestBody.add("roomId", String.valueOf(roomId));
-        if(name != null) requestBody.add("name", name);
+        if (name != null) requestBody.add("name", name);
         if (password != null) requestBody.add("password", password);
         return new HttpEntity<>(requestBody, headers);
     }
