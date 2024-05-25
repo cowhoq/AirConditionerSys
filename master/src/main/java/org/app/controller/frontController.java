@@ -96,12 +96,20 @@ public class frontController {
             return R.success(list);
         return R.error("没有从机状态可以获取");
     }
+
+    /**
+     * 获取房间报表
+     */
     @GetMapping("/getRoomTable")
-    public R<List<Request>> getRoomTable(Long userId){
-        var list = requestService.getRequestListByUserId(userId);
+    public R<List<Request>> getRoomTable(Long roomId){
+        var list = requestService.getRoomRequestList(roomId);
         if(list != null)    return R.success(list);
-        else return R.error("没有该用户报表！");
+        else return R.error("没有该房间报表！");
     }
+
+    /**
+     * 按年月日获取报表
+     */
     @GetMapping("/getTable")
     public R<List<Request>> getTable(Period period){
         var list = requestService.getRequestListByPeriod(period);

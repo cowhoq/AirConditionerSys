@@ -78,12 +78,9 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
         }
         return null;
     }
-/*    public List<Request> getRoomRequestList(Long roomId){
-        var now = LocalDate.now();
-        var lastDay = now.minusDays(1);
-        var lqw = new LambdaQueryWrapper<Request>();
-        lqw.between(Request::getStartTime, lastDay, lastDay);
+    public List<Request> getRoomRequestList(Long roomId){
+        LambdaQueryWrapper<Request> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Request::getRoomId, roomId);
         return this.list(lqw);
-    }*/
+    }
 }
