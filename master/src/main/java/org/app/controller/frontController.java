@@ -97,8 +97,8 @@ public class frontController {
         return R.error("没有从机状态可以获取");
     }
     @GetMapping("/getRoomTable")
-    public R<List<Request>> getRoomTable(Long roomId){
-        var list = requestService.getRoomRequestList(roomId);
+    public R<List<Request>> getRoomTable(Long userId){
+        var list = requestService.getRequestListByUserId(userId);
         if(list != null)    return R.success(list);
         else return R.error("没有该用户报表！");
     }
