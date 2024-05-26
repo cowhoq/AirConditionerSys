@@ -40,7 +40,10 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
         if (rooms.isEmpty())
             return new ArrayList<>();
         var roomIds = rooms.stream().map(Room::getRoomId).toList();
-        return this.list(new LambdaQueryWrapper<Request>().in(Request::getRoomId, roomIds));
+        var requestLqw = new LambdaQueryWrapper<Request>();
+        requestLqw.in(Request::getRoomId, roomIds);
+        requestLqw.eq(Request::getUserId, userId);
+        return this.list(requestLqw);
     }
 
     /**

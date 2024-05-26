@@ -26,6 +26,7 @@ CREATE TABLE request
 (
     id                bigint PRIMARY KEY NOT NULL,
     room_id           bigint             NOT NULL,
+    user_id           bigint             NOT NULL,
     start_time        DATETIME           NOT NULL,
     stop_time         DATETIME           NOT NULL,
     start_temperature int                NOT NULL,

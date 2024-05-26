@@ -36,6 +36,9 @@ public class MasterService {
     @Autowired
     private RequestService requestService;
 
+    @Autowired
+    private RoomService roomService;
+
     @Value("classpath:config.json")
     Resource resource;
 
@@ -217,6 +220,9 @@ public class MasterService {
         if (seconds % 60 > 0)
             minutes++;
         request.setTotalFee(new BigDecimal(minutes * fanCost.get(request.getFanSpeed())));
+        var roomId = request.getRoomId();
+        var userId = roomService.getById(roomId).getUserId();
+        request.setUserId(userId);
         requestService.save(request);
     }
 
@@ -237,12 +243,15 @@ public class MasterService {
         calcFeeAndSave(request);
         return true;
     }
+
     /**
      * 获取所有从机状态
      */
-    public List<Request> getSlaveList(){
+    @CheckWorkMode
+    public List<Request> getSlaveList() {
         return requestList;
     }
+
     /**
      * 对请求队列中的请求进行调度
      * <p>
@@ -276,6 +285,7 @@ public class MasterService {
         if (TEST)
             log.info("本次调度请求有: {}", sendAirRoomId);
     }
+
     /**
      * 供从机和前端调用, 实时获取本次请求所需要的消耗的能量和所需支付的金额
      * <p>
