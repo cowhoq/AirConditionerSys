@@ -2,7 +2,6 @@ package org.app.service;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -24,7 +23,6 @@ public class SlaveService {
     @Setter
     public static Long ROOM_ID = null;
 
-    public static boolean Cheak_health = true;
     private static final Integer CHANGE_TEMP = 5;  // 房间每秒变化0.4°C
 
     private static final Integer HIGH_SPEED = 15;  // 高风速每分钟变化1度
@@ -45,8 +43,9 @@ public class SlaveService {
 
     private final AtomicInteger setTemp = new AtomicInteger(2400); // 设定温度
 
-
     private final AtomicReference<String> mode = new AtomicReference<>("FAST"); // 设定风速
+
+    private AtomicReference<Boolean> wind = new AtomicReference<>(false);
 
     public static void setStatus(Status _status) {
         status.set(_status);
@@ -79,6 +78,10 @@ public class SlaveService {
 
     public Integer getCurTemp() {
         return curTemp.get();
+    }
+
+    public Boolean getWind() {
+        return wind.get();
     }
 
     public Boolean powerOn() {
@@ -164,7 +167,7 @@ public class SlaveService {
 
         // 如果是自动停机, 则等待 15 下(因为计数单位不一定是秒, 所以使用 "下" 这个字)
         if (status.get().equals(Status.AUTO_OFF)) {
-             second--;
+            second--;
             if (second <= 0 && powerOn()) {
                 status.set(Status.ON);
             }
@@ -172,7 +175,8 @@ public class SlaveService {
 
         if (status.get().equals(Status.ON)) {
             // 主机允许送风
-            if (needWind()) {
+            wind = new AtomicReference<>(needWind());
+            if (wind.get()) {
                 // 根据设定的风速获取温度变化速度
                 var speed = getSpeed(mode.get());
                 var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
@@ -183,8 +187,8 @@ public class SlaveService {
                     status.set(Status.AUTO_OFF);
                     second = 15; // 等待 15 下才能再开机
                 }
-                log.info(curTemp+";"+setTemp+";"+status+";"+second);
-            }else {
+                log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
+            } else {
                 log.info("主机关机或断开连接！");
             }
         }

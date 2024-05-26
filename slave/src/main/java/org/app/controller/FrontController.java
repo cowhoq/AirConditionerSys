@@ -41,9 +41,9 @@ public class FrontController {
      */
     @PostMapping("/PowerOn")
     public R<Status> powerOn() {
-        slaveService.setStatus(Status.ON);
+        SlaveService.setStatus(Status.ON);
         slaveService.powerOn();
-        return R.success(slaveService.getStatus());
+        return R.success(SlaveService.getStatus());
     }
 
     /**
@@ -92,6 +92,14 @@ public class FrontController {
             return r;
 
         return r;
+    }
+
+    /**
+     * 返回给前端, 当前主机是否送风
+     */
+    @GetMapping("/wind")
+    public R<Boolean> getWind() {
+        return R.success(slaveService.getWind());
     }
 
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId) {
