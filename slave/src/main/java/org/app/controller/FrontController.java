@@ -3,6 +3,7 @@ package org.app.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.common.Status;
+import org.app.common.WorkStatus;
 import org.app.service.SlaveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -88,18 +89,24 @@ public class FrontController {
         var response = restTemplate.exchange(SlaveService.BASE_URL + "/slaveFee",
                 HttpMethod.POST, requestEntity, R.class);
         var r = response.getBody();
-        if (r != null && r.getCode() == 1)
-            return r;
+        return r;
+    }
 
+    @GetMapping("/getMasterStatus")
+    public R<WorkStatus> getMasterStatus(){
+        var restTemplate = new RestTemplate();
+        var requestEntity = getRequestEntity(null);
+        var response = restTemplate.exchange(SlaveService.BASE_URL + "/getWorkStatus",
+                HttpMethod.GET, requestEntity, R.class);
+        var r = response.getBody();
         return r;
     }
 
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity(Long roomId) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         var requestBody = new LinkedMultiValueMap<String, String>();
-        requestBody.add("roomId", String.valueOf(roomId));
+        if(roomId != null)  requestBody.add("roomId", String.valueOf(roomId));
         return new HttpEntity<>(requestBody, headers);
     }
 }

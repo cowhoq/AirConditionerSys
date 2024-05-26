@@ -74,7 +74,7 @@ public class FrontController {
     /**
      * 获取主机状态
      */
-    @PostMapping("/getWorkStatus")
+    @GetMapping("/getWorkStatus")
     public R<WorkStatus> getWork() {
         var response = new WorkStatus();
         response.setWorkmode(masterService.getWorkMode());
