@@ -22,8 +22,8 @@ public class SlaveStatusService {
     @Autowired
     private RoomService roomService;
 
-    @Value("${master.EXPIRY_DURATION }")
-    private static Long EXPIRY_DURATION;
+    @Value("${master.EXPIRY_DURATION}")
+    private Long EXPIRY_DURATION;
 
     /**
      * 存储, 存储启动了的 slave 的 roomId, 和最新请求时间
@@ -38,6 +38,7 @@ public class SlaveStatusService {
     public Boolean isRegistered(Long roomId) {
         return registeredId.containsKey(roomId);
     }
+
     /**
      * 检查从机的注册状态
      */

@@ -108,6 +108,9 @@ public class SlaveService {
         return false;
     }
 
+    /**
+     * @return 如果 result 不为 null, 则返回 对应的值, 否则返回 null, 表示未获取到
+     */
     public Boolean needWind() {
         var restTemplate = new RestTemplate();
         var requestEntity
@@ -115,11 +118,9 @@ public class SlaveService {
         var response = restTemplate.exchange(BASE_URL + "/sendAir",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
-        if (result != null) {
-            //log.info(String.valueOf(result.getData()));
+        if (result != null)
             return (boolean) result.getData();
-        }
-        return false;
+        return null;
     }
 
     private HttpEntity<MultiValueMap<String, String>>
@@ -175,22 +176,24 @@ public class SlaveService {
 
         if (status.get().equals(Status.ON)) {
             // 主机允许送风
-            wind = new AtomicReference<>(needWind());
-            if (wind.get()) {
-                // 根据设定的风速获取温度变化速度
-                var speed = getSpeed(mode.get());
-                var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
-                curTemp.addAndGet(adjustment);
+            var _wind = needWind();
+            if (_wind != null) {
+                wind = new AtomicReference<>(_wind);
+                if (_wind) {
+                    // 根据设定的风速获取温度变化速度
+                    var speed = getSpeed(mode.get());
+                    var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
+                    curTemp.addAndGet(adjustment);
 
-                // 检查是否可以关机
-                if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
-                    status.set(Status.AUTO_OFF);
-                    second = 15; // 等待 15 下才能再开机
+                    // 检查是否可以关机
+                    if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
+                        status.set(Status.AUTO_OFF);
+                        second = 15; // 等待 15 下才能再开机
+                    }
+                    log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
                 }
-                log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
-            } else {
+            } else
                 log.info("主机关机或断开连接！");
-            }
         }
 
     }
