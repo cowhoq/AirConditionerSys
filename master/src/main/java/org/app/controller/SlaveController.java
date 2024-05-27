@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -155,10 +154,6 @@ public class SlaveController {
      */
     @PostMapping("/slaveFee")
     public R<List<BigDecimal>> slaveFee(Long roomId) {
-        var energyAndFee = masterService.getEnergyAndFee(roomId);
-        var r = new ArrayList<BigDecimal>();
-        r.add(energyAndFee.getLeft());
-        r.add(energyAndFee.getRight());
-        return R.success(r);
+        return R.success(masterService.getEnergyAndFee(roomId));
     }
 }

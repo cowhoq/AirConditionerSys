@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.app.aop.CheckWorkMode;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
-import org.graalvm.collections.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -42,16 +41,16 @@ public class MasterService {
     @Value("classpath:config.json")
     Resource resource;
 
-    private Pair<Integer, Integer> heatingDefaultTemp;
+    private List<Integer> heatingDefaultTemp;
 
-    private Pair<Integer, Integer> refrigerationDefaultTemp;
+    private List<Integer> refrigerationDefaultTemp;
 
     private Map<String, Double> fanCost;
 
     @Getter
     private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
-    private Pair<Integer, Integer> range;
+    private List<Integer> range;
 
     /**
      * 请求队列
@@ -84,10 +83,8 @@ public class MasterService {
         try {
             var mapper = new ObjectMapper();
             Map<String, Object> config = mapper.readValue(resource.getInputStream(), Map.class);
-            var list = (List) config.get("heating-default-temperature");
-            heatingDefaultTemp = Pair.create((Integer) list.get(0), (Integer) list.get(1));
-            list = (List) config.get("refrigeration-default-temperature");
-            refrigerationDefaultTemp = Pair.create((Integer) list.get(0), (Integer) list.get(1));
+            heatingDefaultTemp = (List<Integer>) config.get("heating-default-temperature");
+            refrigerationDefaultTemp = (List<Integer>) config.get("heating-default-temperature");
             fanCost = (Map<String, Double>) config.get("fan-cost");
         } catch (IOException e) {
             log.error("读取配置文件失败, 请检查 resources 文件夹下是否存在 config.json");
@@ -103,7 +100,7 @@ public class MasterService {
      *
      * @return 开机成功返回 true, 否则返回 false
      */
-    public Boolean powerOn(WorkMode workMode, Pair<Integer, Integer> range) {
+    public Boolean powerOn(WorkMode workMode, List<Integer> range) {
         if (this.workMode != WorkMode.OFF)
             return false;
         getDefaultParams();
@@ -148,7 +145,7 @@ public class MasterService {
         var stopTemp = request.getStopTemp();
 
         // 检查设定温度是否在范围内
-        if (stopTemp > range.getRight() || stopTemp < range.getLeft())
+        if (stopTemp > range.get(1) || stopTemp < range.get(0))
             return false;
 
         // 根据工作模式比较起始温度和停止温度
@@ -298,7 +295,7 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 消耗的能量和金额
      */
-    public Pair<BigDecimal, BigDecimal> getEnergyAndFee(Long roomId) {
+    public List<BigDecimal> getEnergyAndFee(Long roomId) {
         var optionalRequest = requestList.stream().filter(i -> i.getRoomId().equals(roomId)).findFirst();
 
         if (optionalRequest.isPresent()) {
@@ -309,7 +306,7 @@ public class MasterService {
             if (seconds % 60 > 0)
                 minutes++;
             var energy = new BigDecimal(minutes * fanCost.get(request.getFanSpeed()));
-            return Pair.create(energy, energy.multiply(new BigDecimal(5)));
+            return new ArrayList<>(List.of(energy, energy.multiply(new BigDecimal(5))));
         }
         return null;
     }
@@ -320,7 +317,7 @@ public class MasterService {
      * 原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
      */
     @CheckWorkMode
-    public Pair<Integer, Integer> getRange() {
+    public List<Integer> getRange() {
         return range;
     }
 

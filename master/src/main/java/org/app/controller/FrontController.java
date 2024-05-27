@@ -7,11 +7,11 @@ import org.app.entity.WorkMode;
 import org.app.entity.WorkStatus;
 import org.app.service.MasterService;
 import org.app.service.RequestService;
-import org.graalvm.collections.Pair;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -63,7 +63,8 @@ public class FrontController {
         try {
             var request = new WorkStatus();
             request.setWorkmode(workMode);
-            request.setRange(Pair.create(firstValue, secondValue));
+            var range = new ArrayList<>(List.of(firstValue, secondValue));
+            request.setRange(range);
             masterService.powerOn(request.getWorkmode(), request.getRange());
             return R.success(null);
         } catch (Exception e) {
