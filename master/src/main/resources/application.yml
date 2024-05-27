@@ -18,7 +18,7 @@ mybatis-plus:
             id-type: ASSIGN_ID
 master:
     fixedRate: 1000
-    TEST: true
+    TEST: false
     EXPIRY_DURATION: 5000
     pollingInterval: 500
 

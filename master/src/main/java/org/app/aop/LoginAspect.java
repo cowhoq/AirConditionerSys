@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 从机发送请求时, 检查从机是否开机
+ * 从机发送请求时, 检查从机是否登录
  */
 @Aspect
 @Component

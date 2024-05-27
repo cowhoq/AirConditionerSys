@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -30,7 +30,7 @@ import static java.lang.System.exit;
  * @author zfq
  */
 @Slf4j
-@Component
+@Service
 public class MasterService {
     @Autowired
     private RequestService requestService;
@@ -84,7 +84,7 @@ public class MasterService {
             var mapper = new ObjectMapper();
             Map<String, Object> config = mapper.readValue(resource.getInputStream(), Map.class);
             heatingDefaultTemp = (List<Integer>) config.get("heating-default-temperature");
-            refrigerationDefaultTemp = (List<Integer>) config.get("heating-default-temperature");
+            refrigerationDefaultTemp = (List<Integer>) config.get("refrigeration-default-temperature");
             fanCost = (Map<String, Double>) config.get("fan-cost");
         } catch (IOException e) {
             log.error("读取配置文件失败, 请检查 resources 文件夹下是否存在 config.json");

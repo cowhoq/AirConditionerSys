@@ -1,5 +1,6 @@
 package org.app.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.entity.Period;
 import org.app.entity.Request;
@@ -9,7 +10,6 @@ import org.app.service.MasterService;
 import org.app.service.RequestService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,8 @@ import java.util.List;
  * @author czl
  * @date 2024-5-15 16:25
  */
-@Controller
+@Slf4j
+@RestController
 public class FrontController {
     @Autowired
     private MasterService masterService;
@@ -31,10 +32,10 @@ public class FrontController {
      * 前端-主机开机
      */
     @GetMapping("/powerOn")
-    public R<Void> powerOn() {
+    public R<String> powerOn() {
         try {
             masterService.powerOn(null, null);
-            return R.success(null);
+            return R.success("启动成功");
         } catch (Exception e) {
             return R.error("开机失败");
         }
@@ -57,26 +58,39 @@ public class FrontController {
      * 前端设置主机工作状态和温度
      */
     @PostMapping("/setWorkStatus")
-    public R<Void> setWorkMode(@RequestParam("workMode") WorkMode workMode,
-                               @RequestParam("firstValue") int firstValue,
-                               @RequestParam("secondValue") int secondValue) {
-        try {
-            var request = new WorkStatus();
-            request.setWorkmode(workMode);
-            var range = new ArrayList<>(List.of(firstValue, secondValue));
-            request.setRange(range);
-            masterService.powerOn(request.getWorkmode(), request.getRange());
-            return R.success(null);
-        } catch (Exception e) {
-            return R.error("设置失败");
-        }
+    public R<String> setWorkMode(String workMode, Integer firstValue, Integer secondValue) {
+        log.info("收到的参数: {}, {}, {}", workMode, firstValue, secondValue);
+        if (workMode == null || firstValue == null || secondValue == null)
+            return R.error("参数错误");
+
+        var request = new WorkStatus();
+        if (workMode.equals("HEATING"))
+            request.setWorkmode(WorkMode.HEATING);
+        else if (workMode.equals("REFRIGERATION"))
+            request.setWorkmode(WorkMode.REFRIGERATION);
+        else
+            return R.error("参数错误");
+
+        var range = new ArrayList<>(List.of(firstValue, secondValue));
+        request.setRange(range);
+        masterService.powerOn(request.getWorkmode(), request.getRange());
+        return R.success("设置成功");
     }
 
     /**
-     * 获取主机状态
+     * 获取主机工作状态
+     */
+    @GetMapping("/getWorKMode")
+    public R<String> getWorkMode() {
+        return R.success(masterService.getWorkMode().toString());
+    }
+
+
+    /**
+     * 获取主机工作状态和温度
      */
     @GetMapping("/getWorkStatus")
-    public R<WorkStatus> getWork() {
+    public R<WorkStatus> getWorkStatus() {
         var response = new WorkStatus();
         response.setWorkmode(masterService.getWorkMode());
         response.setRange(masterService.getRange());

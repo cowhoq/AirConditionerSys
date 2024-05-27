@@ -51,7 +51,7 @@ public class SlaveController {
         if (name == null || password == null || roomId == null)
             throw new IllegalArgumentException("登录参数错误");
 
-        log.info("从机登录({}), name={}, password={}", roomId, name, password);
+        log.info("从机请求登录({}), name={}, password={}", roomId, name, password);
         if (!userService.login(name, password))
             return R.error("用户名或密码错误");
         else {
@@ -62,7 +62,8 @@ public class SlaveController {
                 return R.error("房间正在使用");
             room.setInuse(true);
             roomService.updateById(room);
-            slaveStatusService.registerOrUpdateRegisteredId(roomId);
+            slaveStatusService.registerId(roomId);
+            log.info("从机({})登录成功", roomId);
             return R.success(slaveDefaultTemp);
         }
     }
@@ -81,7 +82,7 @@ public class SlaveController {
             roomService.updateById(room);
             // 删除请求队列中从机的请求
             this.slavePowerOff(roomId);
-            slaveStatusService.registerOrUpdateRegisteredId(roomId);
+            slaveStatusService.unregisterId(roomId);
             return R.success("关机成功");
         }
         return R.error("关机失败");
@@ -108,6 +109,8 @@ public class SlaveController {
     @PostMapping("/OnSlaverPower")
     public R<String> slaveRequest(Long roomId, Integer setTemp, Integer curTemp, String mode) {
         log.info("从机请求参数: {}, {}, {}, {}", roomId, setTemp, curTemp, mode);
+        if (roomId == null || setTemp == null || curTemp == null || mode == null)
+            return R.error("参数错误");
         var request = new Request();
         request.setRoomId(roomId);
         request.setStopTemp(setTemp);
@@ -115,8 +118,10 @@ public class SlaveController {
         request.setFanSpeed(mode);
         if (masterService.slaveRequest(request))
             return R.success(null);
-        else
+        else {
+            log.error("添加请求失败");
             return R.error(null);
+        }
     }
 
     /**
@@ -127,7 +132,7 @@ public class SlaveController {
     public R<Boolean> slavePowerOff(Long roomId) {
         log.info("从机请求关闭: {}", roomId);
         if (masterService.slavePowerOff(roomId)) {
-            slaveStatusService.registerOrUpdateRegisteredId(roomId);
+            slaveStatusService.updateId(roomId);
             return R.success(true);
         }
         return R.success(false);
@@ -145,8 +150,10 @@ public class SlaveController {
         log.info("收到来自从机的查询: {}", roomId);
         if (roomId == null)
             return R.success(false);
-        slaveStatusService.registerOrUpdateRegisteredId(roomId);
-        return R.success(masterService.contains(roomId));
+        slaveStatusService.updateId(roomId);
+        var r = masterService.contains(roomId);
+        log.info("收到来自从机的查询: {}, 查询结果: {}", roomId, r);
+        return R.success(r);
     }
 
     /**

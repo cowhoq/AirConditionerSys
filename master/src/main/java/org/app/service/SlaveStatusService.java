@@ -1,5 +1,6 @@
 package org.app.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +15,7 @@ import java.util.Map;
 /**
  * 从机状态管理
  */
+@Slf4j
 @Service
 public class SlaveStatusService {
     @Autowired
@@ -30,9 +32,20 @@ public class SlaveStatusService {
      */
     private final Map<Long, LocalDateTime> registeredId = Collections.synchronizedMap(new HashMap<>());
 
-
-    public void registerOrUpdateRegisteredId(Long roomId) {
+    public void registerId(Long roomId) {
         registeredId.put(roomId, LocalDateTime.now());
+    }
+
+    public void unregisterId(Long roomId) {
+        registeredId.remove(roomId);
+    }
+
+    /**
+     * 更新注册状态
+     */
+    public void updateId(Long roomId) {
+        if (this.isRegistered(roomId))
+            registeredId.put(roomId, LocalDateTime.now());
     }
 
     public Boolean isRegistered(Long roomId) {
@@ -48,8 +61,10 @@ public class SlaveStatusService {
         for (var entry : registeredId.entrySet()) {
             // 如果从机状态超时, 则认为从机离线, 删除其请求, 并将其房间使用状态设置为未在使用
             if (ChronoUnit.MINUTES.between(entry.getValue(), now) > EXPIRY_DURATION) {
-                masterService.slavePowerOff(entry.getKey());
-                var room = roomService.getById(entry.getKey());
+                var roomId = entry.getKey();
+                log.error("从机 {} 超时, 离线", roomId);
+                masterService.slavePowerOff(roomId);
+                var room = roomService.getById(roomId);
                 room.setInuse(false);
                 roomService.updateById(room);
                 registeredId.remove(entry.getKey());
