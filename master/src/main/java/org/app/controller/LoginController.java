@@ -2,16 +2,23 @@ package org.app.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
+import org.app.entity.Request;
 import org.app.entity.Room;
 import org.app.entity.User;
+import org.app.service.RequestService;
 import org.app.service.RoomService;
 import org.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
+ * 前台登录, 结账窗口
+ *
  * @author zfq
  */
 @Slf4j
@@ -22,6 +29,9 @@ public class LoginController {
 
     @Autowired
     RoomService roomService;
+
+    @Autowired
+    RequestService requestService;
 
     /**
      * 新用户注册
@@ -50,5 +60,13 @@ public class LoginController {
         room.setUserId(user.getId());
         roomService.save(room);
         return R.success(room.getRoomId());
+    }
+
+    /**
+     * 根据 userId 获取用户的账单列表
+     */
+    @GetMapping("/bill")
+    public R<List<Request>> getBillByUserId(Long userId) {
+        return R.success(requestService.getRequestListByUserId(userId));
     }
 }

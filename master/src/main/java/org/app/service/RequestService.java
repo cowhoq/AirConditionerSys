@@ -2,7 +2,7 @@ package org.app.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.app.entity.Period;
+import org.app.entity.dto.Period;
 import org.app.entity.Request;
 import org.app.entity.Room;
 import org.app.mapper.RequestMapper;

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.app.aop.CheckLogin;
 import org.app.common.R;
 import org.app.entity.Request;
-import org.app.entity.WorkStatus;
 import org.app.service.MasterService;
 import org.app.service.RoomService;
 import org.app.service.SlaveStatusService;
@@ -12,7 +11,6 @@ import org.app.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,7 +60,7 @@ public class SlaveController {
                 return R.error("房间正在使用");
             room.setInuse(true);
             roomService.updateById(room);
-            slaveStatusService.registerId(roomId);
+            slaveStatusService.register(roomId);
             log.info("从机({})登录成功", roomId);
             return R.success(slaveDefaultTemp);
         }
@@ -82,23 +80,10 @@ public class SlaveController {
             roomService.updateById(room);
             // 删除请求队列中从机的请求
             this.slavePowerOff(roomId);
-            slaveStatusService.unregisterId(roomId);
+            slaveStatusService.unregister(roomId);
             return R.success("关机成功");
         }
         return R.error("关机失败");
-    }
-
-    /**
-     * 返回主机的工作模式和工作温度
-     */
-    @CheckLogin
-    @GetMapping(path = "/getMasterWork", produces = MediaType.APPLICATION_JSON_VALUE)
-    public R<WorkStatus> getMasterWorkParams() {
-        log.info("getMasterWorkParams");
-        var status = new WorkStatus();
-        status.setWorkmode(masterService.getWorkMode());
-        status.setRange(masterService.getRange());
-        return R.success(status);
     }
 
 
@@ -146,11 +131,14 @@ public class SlaveController {
      * @return 如果在返回 true, 如果不在返回 false
      */
     @PostMapping("/sendAir")
-    public R<Boolean> sendAir(Long roomId) {
+    public R<Boolean> sendAir(Long roomId, Integer setTemp, Integer curTemp, String mode) {
         log.info("收到来自从机的查询: {}", roomId);
         if (roomId == null)
             return R.success(false);
+        if (roomId == null || setTemp == null || curTemp == null || mode == null)
+            return R.error("参数错误");
         slaveStatusService.updateId(roomId);
+        slaveStatusService.updateSlaveStatus(roomId, curTemp, setTemp, "正常", mode);
         var r = masterService.contains(roomId);
         log.info("收到来自从机的查询: {}, 查询结果: {}", roomId, r);
         return R.success(r);

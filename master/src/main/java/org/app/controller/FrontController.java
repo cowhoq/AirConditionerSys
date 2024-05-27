@@ -2,12 +2,14 @@ package org.app.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
-import org.app.entity.Period;
+import org.app.entity.dto.Period;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
-import org.app.entity.WorkStatus;
+import org.app.entity.dto.WorkStatus;
+import org.app.entity.dto.SlaveStatus;
 import org.app.service.MasterService;
 import org.app.service.RequestService;
+import org.app.service.SlaveStatusService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,8 +27,12 @@ import java.util.List;
 public class FrontController {
     @Autowired
     private MasterService masterService;
+
     @Autowired
     private RequestService requestService;
+
+    @Autowired
+    private SlaveStatusService slaveStatusService;
 
     /**
      * 前端-主机开机
@@ -87,7 +93,7 @@ public class FrontController {
 
 
     /**
-     * 获取主机工作状态和温度
+     * 获取主机工作状态和温度, 主机前端和从机后端共用的函数
      */
     @GetMapping("/getWorkStatus")
     public R<WorkStatus> getWorkStatus() {
@@ -98,11 +104,11 @@ public class FrontController {
     }
 
     /**
-     * 获取从机状态
+     * 获取从机状态列表
      */
     @GetMapping("/getSlaveStatus")
-    public R<List<Request>> getAllSlaveStatus() {
-        var list = masterService.getSlaveList();
+    public R<List<SlaveStatus>> getSlaveStatus() {
+        var list = slaveStatusService.getSlaveStatusList();
         if (list != null)
             return R.success(list);
         return R.error("没有从机状态可以获取");

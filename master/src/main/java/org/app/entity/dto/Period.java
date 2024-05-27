@@ -1,4 +1,4 @@
-package org.app.entity;
+package org.app.entity.dto;
 
 public enum Period {
     MONTH,

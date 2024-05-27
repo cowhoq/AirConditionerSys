@@ -109,12 +109,12 @@ public class SlaveService {
     }
 
     /**
-     * @return 如果 result 不为 null, 则返回 对应的值, 否则返回 null, 表示未获取到
+     * @return 如果 result 不为 null, 则返回对应的值, 否则返回 null, 表示未获取到
      */
     public Boolean needWind() {
         var restTemplate = new RestTemplate();
         var requestEntity
-                = getRequestEntity(ROOM_ID, null, null, null);
+                = getRequestEntity(ROOM_ID, getSetTemp(), getCurTemp(), getMode());
         var response = restTemplate.exchange(BASE_URL + "/sendAir",
                 HttpMethod.POST, requestEntity, R.class);
         var result = response.getBody();
