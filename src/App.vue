@@ -8,27 +8,30 @@
         <el-col :lg="8" :xs="24">
           <div class="window">
             <h2>开关控制</h2>
-            <PowerControl />
+            <PowerControl :workMode="workMode" @refresh="refresh"/>
           </div>
         </el-col>
-        <el-col :lg="8" :xs="24">
+
+        <el-col :lg="8" :xs="24" v-if="workMode != 'OFF'">
           <div class="window">
             <h2>模式控制</h2>
-            <WorkModeControl />
+            <WorkModeControl/>
           </div>
         </el-col>
-        <el-col :lg="8" :xs="24">
+
+        <el-col :lg="8" :xs="24" v-if="workMode != 'OFF'">
           <div class="window">
             <h2>从机状态</h2>
-            <SlaveStatus />
+            <SlaveStatus/>
           </div>
         </el-col>
       </el-row>
-      <el-row :gutter="24" style="margin-top: 20px;">
+
+      <el-row :gutter="24" style="margin-top: 20px;" v-if="workMode != 'OFF'">
         <el-col :span="24">
           <div class="window">
             <h2>查看报表</h2>
-            <ReportView />
+            <ReportView/>
           </div>
         </el-col>
       </el-row>
@@ -36,24 +39,43 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import PowerControl from './components/PowerControl.vue';
 import WorkModeControl from './components/WorkModeControl.vue';
 import SlaveStatus from './components/SlaveStatus.vue';
 import ReportView from './components/ReportView.vue';
+import axiosRequest from "@/utils/axiosRequest.ts";
+import {ElMessage} from "element-plus";
+import {onMounted, ref} from "vue";
 
-export default {
-  name: 'App',
-  components: {
-    PowerControl,
-    WorkModeControl,
-    SlaveStatus,
-    ReportView,
-  },
-};
+let workMode = ref('')
+
+onMounted(async () => {
+  await getWorkStatus()
+})
+let refresh = (v:any) => {
+  console.log(v)
+  getWorkStatus()
+}
+async function getWorkStatus() {
+  try {
+    let r = await axiosRequest({
+      url: '/getWorKMode',
+      method: 'get',
+    })
+    console.log(r.data);
+    if (r.code == 1)
+      workMode.value = r.data
+    else
+      throw new Error(r.msg || '操作失败')
+
+  } catch (e: any) {
+    ElMessage.error('出错了: ' + e.message);
+  }
+}
 </script>
 
-<style>
+<style scoped>
 .header {
   text-align: center;
   margin-bottom: 20px;
@@ -75,6 +97,4 @@ export default {
   text-align: center;
   margin-bottom: 20px;
 }
-
-
 </style>

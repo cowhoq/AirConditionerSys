@@ -27,25 +27,31 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ReportView',
-  data() {
-    return {
-      period: '',
-      reports: [],
-    };
-  },
-  methods: {
-    fetchReports() {
-      this.$axios.get('/getTable', { params: { period: this.period } })
-        .then(response => {
-          this.reports = response.data.data;  // Ensure this matches your API response structure
-        })
-        .catch(() => {
-          this.$message.error('Failed to fetch reports');
-        });
-    },
-  },
-};
+<script setup lang="ts">
+import {ref} from 'vue';
+import axiosRequest from "@/utils/axiosRequest.ts";
+import {ElMessage} from "element-plus";
+
+let period = ref('')
+let reports = ref([])
+
+async function fetchReports() {
+  try {
+    let r = await axiosRequest({
+      url: '/getTable',
+      method: 'get',
+      params: {
+        period: period.value
+      }
+    })
+
+    if (r.code == 1)
+      reports.value = r.data
+    else
+      throw new Error(r.msg || '操作失败')
+
+  } catch (e: any) {
+    ElMessage.error('出错了: ' + e.message);
+  }
+}
 </script>

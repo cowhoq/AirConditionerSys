@@ -9,27 +9,33 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SlaveStatus',
-  data() {
-    return {
-      slaveStatuses: [],
-    };
-  },
-  mounted() {
-    this.fetchSlaveStatuses();
-  },
-  methods: {
-    fetchSlaveStatuses() {
-      this.$axios.get('/getSlaveStatus')
-        .then(response => {
-          this.slaveStatuses = response.data;
-        })
-        .catch(() => {
-          this.$message.error('Failed to fetch slave statuses');
-        });
-    },
-  },
-};
+<script lang="ts" setup>
+import {ref, onMounted} from 'vue';
+import axiosRequest from "@/utils/axiosRequest.ts";
+import {ElMessage} from "element-plus";
+
+let slaveStatuses = ref([])
+
+onMounted(() => {
+  fetchSlaveStatuses();
+});
+
+async function fetchSlaveStatuses() {
+  try {
+    let r = await axiosRequest({
+      url: '/getSlaveStatus',
+      method: 'get'
+    })
+
+    if (r.code == 1)
+      slaveStatuses.value = r.data
+    else
+      throw new Error(r.msg || '操作失败')
+
+  } catch (e: any) {
+    ElMessage.error('出错了: ' + e.message);
+  }
+}
+
+
 </script>
