@@ -1,7 +1,10 @@
 <template>
-  <div>
-    <el-button type="primary" @click="powerOn">Power On</el-button>
-    <el-button type="danger" @click="powerOff">Power Off</el-button>
+  <div style="text-align: center">
+
+      <el-button type="primary" @click="powerOn">开机</el-button>
+      <el-button type="danger" @click="powerOff">关机</el-button>
+
+
   </div>
 </template>
 
