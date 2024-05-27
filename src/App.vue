@@ -5,21 +5,23 @@
     </div>
     <div class="content">
       <el-row :gutter="24" type="flex" align="middle">
-        <el-col :lg="8" :xs="24">
+        <el-col :lg="12" :xs="24">
           <div class="window">
             <h2>开关控制</h2>
             <PowerControl :workMode="workMode" @refresh="refresh"/>
           </div>
         </el-col>
 
-        <el-col :lg="8" :xs="24" v-if="workMode != 'OFF'">
+        <el-col :lg="12" :xs="24" v-if="workMode != 'OFF'">
           <div class="window">
             <h2>模式控制</h2>
             <WorkModeControl/>
           </div>
         </el-col>
+      </el-row>
 
-        <el-col :lg="8" :xs="24" v-if="workMode != 'OFF'">
+      <el-row ::gutter="24" style="margin-top: 20px;" >
+        <el-col :span="24" v-if="workMode != 'OFF'">
           <div class="window">
             <h2>从机状态</h2>
             <SlaveStatus/>
