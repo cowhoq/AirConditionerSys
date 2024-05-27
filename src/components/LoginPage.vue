@@ -16,6 +16,8 @@
 </template>
 
 <script>
+/* import axios from 'axios'; */
+import axiosRequest from '../axiosRequest';
 export default {
   data() {
     return {
@@ -24,59 +26,115 @@ export default {
     };
   },
   methods: {
-    login() {
-      // 这里假设验证总是成功
-      this.$router.push('/control-panel');
+    
+    async login() {
+    console.log(this.roomNumber, this.idNumber);
+    try {
+      let r = await axiosRequest({
+        url: '/login',
+        method: 'post',
+        params: {
+          roomId: this.roomNumber,
+          name: this.idNumber,
+          password: 'czl'
+        }
+      })
+      console.log('Response status:', r);
+      if (r.data.code == 1) {
+        console.log('Login successful:', r.data);
+        this.$store.commit('SET_ROOM_NUMBER', this.roomNumber);  // 调用 mutation 并传递参数
+        this.$router.push('/control-panel');
+      } else{
+        console.log('Login failed:', r.data);
+        alert(r.data.message || '登录失败，请检查输入或稍后重试。');
+      }
+        
+      
+    } catch (r) {
+        console.error('出错了: ' + r.message);
     }
+  }
+    /* login() {
+      console.log('Login with room number:', this.roomNumber, 'and id number:', this.idNumber);
+      axios.post('/api/login', {
+        params: {
+          roomId: this.roomNumber,
+          name: this.idNumber,
+          password: 'czl'
+        }
+      })
+      .then(response => {
+      console.log('Response status:', response.status);
+      if (response.status === 200) {
+        console.log('Login successful:', response.data);
+        this.$store.dispatch('setRoomNumber', this.roomNumber);
+        this.$router.push('/control-panel');
+      } else {
+        console.log('Login failed:', response.data);
+        alert(response.data.message || '登录失败，请检查输入或稍后重试。');
+      }
+    })
+    .catch(error => {
+      console.error('Error on login:', error);
+      alert(error.response && error.response.data && error.response.data.message ? error.response.data.message : '登录失败，请检查输入或稍后重试。');
+    });
+    } */
   }
 }
 </script>
 
 <style scoped>
 .login-container {
-  max-width: 400px; /* 限制容器宽度 */
-  margin: 50px auto; /* 垂直和水平居中 */
-  padding: 20px; /* 内边距 */
-  background-color: #ffffff; /* 背景颜色 */
-  border-radius: 8px; /* 边角圆滑 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果，增加立体感 */
-  border: 1px solid #ccc; /* 边框 */
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.9); /* 轻微透明的白色背景 */
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: none;
+  backdrop-filter: blur(5px); /* 背景模糊效果，仅在支持的浏览器有效 */
+}
+
+body {
+  background-image: url('https://your-image-url.jpg'); /* 替换为你的图片URL */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .form-group {
-  margin-bottom: 20px; /* 表单组件之间的间距 */
-}
-
-label {
-  display: block; /* 让标签独占一行 */
-  font-size: 16px; /* 标签字体大小 */
-  color: #333; /* 标签字体颜色 */
-  margin-bottom: 5px; /* 标签与输入框之间的间距 */
+  margin-bottom: 25px;
 }
 
 input[type="text"], input[type="password"] {
-  width: 100%; /* 输入框宽度充满容器 */
-  padding: 10px; /* 输入框内边距 */
-  font-size: 14px; /* 输入框字体大小 */
-  border: 1px solid #ccc; /* 输入框边框 */
-  border-radius: 4px; /* 输入框边角圆滑 */
-  box-sizing: border-box; /* box-sizing方式确保元素的宽度包含padding和border */
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  border-color: #007BFF;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.8); /* 蓝色光晕聚焦效果 */
 }
 
 button {
-  width: 100%; /* 按钮宽度充满容器 */
-  padding: 12px; /* 按钮内边距 */
-  background-color: #007BFF; /* 按钮背景颜色 */
-  color: white; /* 按钮字体颜色 */
-  font-size: 16px; /* 按钮字体大小 */
-  border: none; /* 去除边框 */
-  border-radius: 4px; /* 边角圆滑 */
-  cursor: pointer; /* 鼠标悬停时显示指针 */
-  transition: background-color 0.3s; /* 背景色过渡动画 */
+  width: 100%;
+  padding: 12px;
+  background-color: #007BFF;
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
-button:hover {
-  background-color: #0056b3; /* 鼠标悬停时的背景色 */
+button:hover, button:focus {
+  background-color: #0056B3;
+  box-shadow: 0 5px 15px rgba(0, 56, 179, 0.4);
 }
+
 
 </style>

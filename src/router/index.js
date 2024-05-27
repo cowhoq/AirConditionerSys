@@ -17,7 +17,8 @@ export default new Router({
     {
       path: '/control-panel',
       name: 'ControlPanel',
-      component: ControlPanel
+      component: ControlPanel,
+      props: true
     }
   ]
 });

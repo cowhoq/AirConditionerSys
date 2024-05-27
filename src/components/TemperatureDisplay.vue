@@ -1,38 +1,90 @@
 <template>
   <div>
-    <h3 v-if="currentTemp === null">加载中...</h3>
-    <h3 v-else>当前温度: {{ currentTemp }}°C</h3>
+    <h3 v-if="currentTemperature === null">加载中...</h3>
+    <h3 v-else class="temperature">当前温度: {{ currentTemperature }}°C</h3>
+    <h3 class="host-temperature">主机温度: {{ currentHostTemperature }}°C</h3>
+    <h3 class="host-mode">主机工作模式： {{ currentHostMode }} </h3>
+    <h3 class="fan-mode">送风状态：{{ fanMode }}</h3>
   </div>
 </template>
 
 
 <script>
-import axios from 'axios';
+
 
 export default {
   data() {
     return {
-      currentTemp: null // 初始化为 null 表示温度尚未加载
     };
   },
   mounted() {
-    this.fetchCurrentTemperature();
+    console.log('Component mounted, fetching temperature...');
+    this.$store.dispatch('getCurrentTemperature'); // 在组件挂载时获取当前温度
+
+    // 设置每隔一秒获取一次当前温度
+    this.intervalId = setInterval(() => {
+      this.$store.dispatch('getCurrentTemperature');
+    }, 10000);
   },
   methods: {
-    fetchCurrentTemperature() {
-      axios.get('/api/current-temperature')
-        .then(response => {
-          this.currentTemp = response.data.temperature;
-        })
-        .catch(error => {
-          console.error('Error fetching temperature', error);
-          this.currentTemp = 'Error'; // 出错时显示错误信息
-        });
+      
+  },
+  computed: {
+    currentHostTemperature() {
+      return this.$store.state.currentHostTemperature;
+    },
+    currentHostMode() {
+      return this.$store.state.currentHostMode; 
+    },
+    fanMode() {
+      return this.$store.state.fanMode;   
+    },
+    currentTemperature() {
+      return this.$store.state.currentTemperature;
     }
-  }
+}
 }
 </script>
 
-<style>
-/* 这里可以添加一些样式来美化你的温度显示 */
+<style scoped>
+.temperature-display {
+  text-align: center;
+  padding: 20px;
+}
+
+.temperature,
+.host-temperature,
+.host-mode,
+.loading,
+.fan-mode{
+  font-size: 2em;
+  font-weight: bold;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+}
+.fan-mode {
+  background-color: #e0f7fa;
+  color: #00796b;
+}
+.temperature {
+  background-color: #e0f7fa;
+  color: #00796b;
+}
+
+.host-temperature {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.host-mode {
+  background-color: #e1bee7;
+  color: #6a1b9a;
+}
+
+.loading {
+  background-color: #ffeb3b;
+  color: #f57f17;
+}
 </style>
+
