@@ -21,6 +21,8 @@ public class SlaveStatus {
 
     String mode;
 
+    String wind;
+
     LocalDateTime registeredTime;
 
     public SlaveStatus(Long roomId, LocalDateTime registeredTime) {

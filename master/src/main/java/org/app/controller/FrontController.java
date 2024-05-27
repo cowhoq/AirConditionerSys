@@ -109,8 +109,15 @@ public class FrontController {
     @GetMapping("/getSlaveStatus")
     public R<List<SlaveStatus>> getSlaveStatus() {
         var list = slaveStatusService.getSlaveStatusList();
-        if (list != null)
+        if (list != null) {
+            for (var slaveStatus : list) {
+                if (masterService.contains(slaveStatus.getRoomId()))
+                    slaveStatus.setWind("送风");
+                else
+                    slaveStatus.setWind("无风");
+            }
             return R.success(list);
+        }
         return R.error("没有从机状态可以获取");
     }
 
@@ -128,8 +135,10 @@ public class FrontController {
      * 按年月日获取报表
      */
     @GetMapping("/getTable")
-    public R<List<Request>> getTable(Period period) {
-        var list = requestService.getRequestListByPeriod(period);
+    public R<List<Request>> getTable(String period) {
+        if (period == null)
+            return R.error("参数错误");
+        var list = requestService.getRequestListByPeriod(Period.valueOf(period));
         if (list != null) return R.success(list);
         else return R.error("没有报表！");
     }
