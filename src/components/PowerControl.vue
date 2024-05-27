@@ -1,34 +1,32 @@
 <template>
   <div>
-    <button @click="powerOn">开机</button>
-    <button @click="powerOff">关机</button>
+    <el-button type="primary" @click="powerOn">Power On</el-button>
+    <el-button type="danger" @click="powerOff">Power Off</el-button>
   </div>
 </template>
 
 <script>
-import apiClient from '../api';
-
 export default {
   name: 'PowerControl',
   methods: {
     powerOn() {
-      apiClient.get('/powerOn')
+      this.$axios.get('/powerOn')
         .then(() => {
-          alert('开机成功');
+          this.$message.success('Power On Successful');
         })
         .catch(() => {
-          alert('开机失败');
+          this.$message.error('Power On Failed');
         });
     },
     powerOff() {
-      apiClient.get('/powerOff')
+      this.$axios.get('/powerOff')
         .then(() => {
-          alert('关机成功');
+          this.$message.success('Power Off Successful');
         })
         .catch(() => {
-          alert('关机失败');
+          this.$message.error('Power Off Failed');
         });
-    }
-  }
+    },
+  },
 };
 </script>

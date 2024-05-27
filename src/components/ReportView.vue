@@ -1,71 +1,49 @@
 <template>
   <div>
-    <h2>报表</h2>
-    <div>
-      <button @click="fetchReport('daily')">日报表</button>
-      <button @click="fetchReport('weekly')">周报表</button>
-      <button @click="fetchReport('monthly')">月报表</button>
-    </div>
-    <table v-if="reportData.length">
-      <thead>
-        <tr>
-          <th>房间号</th>
-          <th>开关机次数</th>
-          <th>温控请求起止时间</th>
-          <th>温控请求起止温度及风量消耗大小</th>
-          <th>温控请求所需费用</th>
-          <th>总费用</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="record in reportData" :key="record.roomId">
-          <td>{{ record.roomId }}</td>
-          <td>{{ record.powerCycleCount }}</td>
-          <td>
-            <ul>
-              <li v-for="(time, index) in record.requestTimes" :key="index">{{ time }}</li>
-            </ul>
-          </td>
-          <td>
-            <ul>
-              <li v-for="(temperature, index) in record.temperatureRanges" :key="index">{{ temperature }}</li>
-            </ul>
-          </td>
-          <td>
-            <ul>
-              <li v-for="(cost, index) in record.requestCosts" :key="index">{{ cost }}</li>
-            </ul>
-          </td>
-          <td>{{ record.totalCost }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <el-form @submit.prevent="fetchReports">
+      <el-form-item label="Period">
+        <el-date-picker v-model="period" type="date" placeholder="Select date"></el-date-picker>
+      </el-form-item>
+      <el-button type="primary" native-type="submit">Get Reports</el-button>
+    </el-form>
+    <el-table :data="reports" style="width: 100%">
+      <el-table-column prop="roomId" label="Room ID"></el-table-column>
+      <el-table-column prop="powerOnCount" label="Power On Count"></el-table-column>
+      <el-table-column prop="requests" label="Requests">
+        <template v-slot:scope="{ row }">
+          <ul>
+            <li v-for="request in row.requests" :key="request.id">
+              Start: {{ request.startTime }}, End: {{ request.endTime }},
+              Start Temp: {{ request.startTemp }}, End Temp: {{ request.endTemp }},
+              Airflow: {{ request.airflow }}, Cost: {{ request.cost }}
+            </li>
+          </ul>
+        </template>
+      </el-table-column>
+      <el-table-column prop="totalCost" label="Total Cost"></el-table-column>
+    </el-table>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
-import apiClient from '../api';
-
 export default {
   name: 'ReportView',
-  setup() {
-    const reportData = ref([]);
-
-    const fetchReport = (type) => {
-      apiClient.get(`/report?type=${type}`) // 假设后端有此接口
+  data() {
+    return {
+      period: '',
+      reports: [],
+    };
+  },
+  methods: {
+    fetchReports() {
+      this.$axios.get('/getTable', { params: { period: this.period } })
         .then(response => {
-          reportData.value = response.data;
+          this.reports = response.data;
         })
         .catch(() => {
-          alert('获取报表失败');
+          this.$message.error('Failed to fetch reports');
         });
-    };
-
-    return {
-      reportData,
-      fetchReport
-    };
-  }
+    },
+  },
 };
 </script>

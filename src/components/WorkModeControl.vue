@@ -1,47 +1,48 @@
 <template>
   <div>
-    <select v-model="workMode">
-      <option v-for="mode in workModes" :key="mode" :value="mode">{{ mode }}</option>
-    </select>
-    <input v-model="firstValue" type="number" placeholder="First Value">
-    <input v-model="secondValue" type="number" placeholder="Second Value">
-    <button @click="setWorkMode">设置工作模式</button>
+    <el-form @submit.prevent="setWorkMode">
+      <el-form-item label="Work Mode">
+        <el-select v-model="workMode" placeholder="Select Work Mode">
+          <el-option label="Mode 1" value="MODE_1"></el-option>
+          <el-option label="Mode 2" value="MODE_2"></el-option>
+          <!-- Add other modes as needed -->
+        </el-select>
+      </el-form-item>
+      <el-form-item label="First Value">
+        <el-input v-model="firstValue" type="number"></el-input>
+      </el-form-item>
+      <el-form-item label="Second Value">
+        <el-input v-model="secondValue" type="number"></el-input>
+      </el-form-item>
+      <el-button type="primary" native-type="submit">Set Work Mode</el-button>
+    </el-form>
   </div>
 </template>
 
 <script>
-import apiClient from '../api';
-import { ref } from 'vue';
-
 export default {
   name: 'WorkModeControl',
-  setup() {
-    const workModes = ref(['MODE1', 'MODE2', 'MODE3']); // 替换为实际的工作模式
-    const workMode = ref('');
-    const firstValue = ref(0);
-    const secondValue = ref(0);
-
-    const setWorkMode = () => {
-      apiClient.post('/setWorkMode', {
-        workMode: workMode.value,
-        firstValue: firstValue.value,
-        secondValue: secondValue.value
-      })
-      .then(() => {
-        alert('设置成功');
-      })
-      .catch(() => {
-        alert('设置失败');
-      });
-    };
-
+  data() {
     return {
-      workModes,
-      workMode,
-      firstValue,
-      secondValue,
-      setWorkMode
+      workMode: '',
+      firstValue: 0,
+      secondValue: 0,
     };
-  }
+  },
+  methods: {
+    setWorkMode() {
+      this.$axios.post('/setWorkStatus', {
+        workMode: this.workMode,
+        firstValue: this.firstValue,
+        secondValue: this.secondValue,
+      })
+          .then(() => {
+            this.$message.success('Work Mode Set Successfully');
+          })
+          .catch(() => {
+            this.$message.error('Setting Work Mode Failed');
+          });
+    },
+  },
 };
 </script>
