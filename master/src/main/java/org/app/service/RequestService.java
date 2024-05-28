@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.app.entity.dto.Period;
 import org.app.entity.Request;
-import org.app.entity.Room;
 import org.app.mapper.RequestMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,25 +23,17 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
     RoomService roomService;
 
     /**
-     * 查询某一用户名下所有房间的请求
+     * 查询房间的全部请求
      * <p>
      * 这个函数的作用是用户获取账单时使用, 将用户的数据一次性返还给请求方.
      * 请求方根据自己的需要计算相应的数据
      *
-     * @param userId 用户 id
      * @return 请求列表
      */
-    public List<Request> getRequestListByUserId(Long userId) {
-        var lqw = new LambdaQueryWrapper<Room>();
-        lqw.eq(Room::getUserId, userId);
-        var rooms = roomService.list(lqw);
-        if (rooms.isEmpty())
-            return new ArrayList<>();
-        var roomIds = rooms.stream().map(Room::getRoomId).toList();
-        var requestLqw = new LambdaQueryWrapper<Request>();
-        requestLqw.in(Request::getRoomId, roomIds);
-        requestLqw.eq(Request::getUserId, userId);
-        return this.list(requestLqw);
+    public List<Request> getRequestListByRoomId(Long roomId) {
+        var lqw = new LambdaQueryWrapper<Request>();
+        lqw.eq(Request::getRoomId, roomId);
+        return this.list(lqw);
     }
 
     /**
