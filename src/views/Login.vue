@@ -1,20 +1,33 @@
 <template>
   <div class="reception">
     <h1>酒店前台</h1>
-    <el-form @submit.prevent="registerCheckIn" class="window">
+    <el-form @submit.prevent="registerCheckIn" class="window content-center" :inline="false">
       <h2 style="text-align: center">入住登记</h2>
-      <el-form-item label="入住登记">
-        <el-input class="input" v-model="name" placeholder="输入客户姓名"></el-input>
-        <el-input class="input" v-model="roomId" placeholder="输入房间号"></el-input>
+      <el-form-item label="身份证号">
+        <el-input class="input" v-model="userId" placeholder="输入客户身份证号"/>
+      </el-form-item>
+
+      <el-form-item label="客户姓名">
+        <el-input class="input" v-model="name" placeholder="输入客户姓名"/>
+      </el-form-item>
+
+      <el-form-item label="入住房间">
+        <el-input class="input" v-model="roomId" placeholder="输入房间号"/>
+      </el-form-item>
+
+      <el-form-item>
         <el-button type="primary" native-type="submit">登记入住</el-button>
       </el-form-item>
     </el-form>
 
     <div class="window">
-      <el-form @submit.prevent="printBill">
+      <el-form @submit.prevent="printBill" class="content-center">
         <h2 style="text-align: center">打印账单</h2>
         <el-form-item label="输入房间号">
-          <el-input class="input" v-model="roomId" placeholder="输入房间号"></el-input>
+          <el-input class="input" v-model="roomId" placeholder="查询的房间号"></el-input>
+
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" native-type="submit">获取报表</el-button>
         </el-form-item>
       </el-form>
@@ -41,7 +54,7 @@ import {ref} from 'vue';
 import axiosRequest from "@/utils/axiosRequest.js";
 import {ElMessage} from "element-plus";
 
-
+let userId = ref(0);
 let name = ref('');
 let roomId = ref('');
 
@@ -54,6 +67,7 @@ async function registerCheckIn() {
       url: '/register',
       method: 'post',
       params: {
+        userId: userId.value,
         name: name.value,
         roomId: roomId.value,
       }
@@ -114,5 +128,12 @@ async function printBill() {
   border-radius: 8px;
   background-color: #fff;
   height: 30vh;
+}
+
+.content-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style>
