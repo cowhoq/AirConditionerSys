@@ -1,6 +1,5 @@
 package org.app.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.entity.Request;
@@ -39,7 +38,7 @@ public class LoginController {
      * @return 注册成功返回用户 id, 以便后续其他功能使用
      */
     @PostMapping("/register")
-    public R<String> register(String name, Long roomId) {
+    public R<String> register(Long userId, String name, Long roomId) {
         if (name == null || roomId == null)
             return R.error("参数错误");
         log.info("{}, {}", name, roomId);
@@ -47,19 +46,13 @@ public class LoginController {
         if (room != null)
             return R.error("房间已有人使用");
 
-        var lqw = new LambdaQueryWrapper<User>();
-        lqw.eq(User::getName, name);
-        var user = userService.getOne(lqw);
-
+        var user = userService.getById(userId);
         if (user != null) { // 如果查询这个姓名的用户存在, 则直接添加房间
-            var userId = user.getId();
             room = new Room(roomId, userId, false);
             roomService.save(room);
         } else { // 如果用户不存在, 则需要在 user 表中添加用户
-            user = new User();
-            user.setName(name);
+            user = new User(userId, name, "123456");
             userService.save(user);
-            var userId = user.getId();
             room = new Room(roomId, userId, false);
             roomService.save(room);
         }
