@@ -116,6 +116,7 @@ public class FrontController {
                     slaveStatus.setWind("送风");
                 else
                     slaveStatus.setWind("无风");
+                log.info(String.valueOf(slaveStatus));
             }
             return R.success(list);
         }

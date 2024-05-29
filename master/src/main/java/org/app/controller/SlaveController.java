@@ -80,8 +80,9 @@ public class SlaveController {
             room.setInuse(false);
             roomService.updateById(room);
             // 删除请求队列中从机的请求
-            this.slavePowerOff(roomId);
+            masterService.slavePowerOff(roomId);
             slaveStatusService.unregister(roomId);
+            log.info("从机({})关机成功", roomId);
             return R.success("关机成功");
         }
         return R.error("关机失败");

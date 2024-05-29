@@ -259,7 +259,8 @@ public class MasterService {
         // 交给 spring boot 管理后, 主机没有启动(各项参数未初始化)就进行调度, 需要判断一下
         if (workMode.equals(WorkMode.OFF))
             return;
-
+        // 每次添加之前记得清零......
+        sendAirRoomId.clear();
         var size = requestList.size();
         if (size == 0)
             return;

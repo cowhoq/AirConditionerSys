@@ -9,7 +9,7 @@ spring:
         password: root
     # 模板引擎
     thymeleaf:
-        mode: HTML5
+        mode: HTML
         encoding: utf-8
         # 禁用缓存
         cache: false
@@ -25,7 +25,7 @@ mybatis-plus:
 master:
     fixedRate: 1000
     TEST: false
-    EXPIRY_DURATION: 5000
+    EXPIRY_DURATION: 6
     pollingInterval: 500
 
 slave:

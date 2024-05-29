@@ -48,7 +48,7 @@ public class SlaveStatusService {
     public void unregister(Long roomId) {
         if (slaveStatusMap.containsKey(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
-            slaveStatus.setMode("关机");
+            slaveStatus.setStatus("关机");
             slaveStatus.setRegisteredTime(LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
@@ -71,11 +71,8 @@ public class SlaveStatusService {
 
     public void updateSlaveStatus(Long roomId, Integer curTemp, Integer setTemp, String status, String mode) {
         if (this.isRegistered(roomId)) {
-            var slaveStatus = slaveStatusMap.get(roomId);
-            slaveStatus.setCurTemp(curTemp);
-            slaveStatus.setSetTemp(setTemp);
-            slaveStatus.setStatus(status);
-            slaveStatus.setMode(mode);
+            // 如果存在则直接构造一个新的对象, wind 传空字符串 (我想应该不要紧)
+            var slaveStatus = new SlaveStatus(roomId, curTemp, setTemp, status, mode, "", LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
@@ -90,12 +87,17 @@ public class SlaveStatusService {
     @Scheduled(fixedRateString = "${master.pollingInterval}")
     public void checkRegisteredId() {
         var now = LocalDateTime.now();
-        for (var entry : slaveStatusMap.entrySet()) {
-            // 如果从机状态超时, 则认为从机离线, 删除其请求, 并将其房间使用状态设置为未在使用
-            if (ChronoUnit.MINUTES.between(entry.getValue().getRegisteredTime(), now) > EXPIRY_DURATION) {
+        // 在 GPT 的建议下改为使用迭代器
+        var iterator = slaveStatusMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            if (entry.getValue().getStatus().equals("离线"))
+                continue;
+
+            if (ChronoUnit.SECONDS.between(entry.getValue().getRegisteredTime(), now) > EXPIRY_DURATION) {
                 var roomId = entry.getKey();
                 if (entry.getValue().getStatus().equals("关机")) {
-                    slaveStatusMap.remove(roomId);
+                    iterator.remove();
                     continue;
                 }
                 log.error("从机 {} 超时, 离线", roomId);
@@ -107,5 +109,4 @@ public class SlaveStatusService {
             }
         }
     }
-
 }
