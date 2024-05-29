@@ -88,8 +88,7 @@ public class FrontController {
         var requestEntity = getRequestEntity(roomId);
         var response = restTemplate.exchange(SlaveService.BASE_URL + "/slaveFee",
                 HttpMethod.POST, requestEntity, R.class);
-        var r = response.getBody();
-        return r;
+        return response.getBody();
     }
 
     @GetMapping("/getMasterStatus")
@@ -98,8 +97,7 @@ public class FrontController {
         var requestEntity = getRequestEntity(null);
         var response = restTemplate.exchange(SlaveService.BASE_URL + "/getWorkStatus",
                 HttpMethod.GET, requestEntity, R.class);
-        var r = response.getBody();
-        return r;
+        return response.getBody();
     }
 
     /**
