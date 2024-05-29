@@ -8,10 +8,7 @@ import org.app.mapper.RequestMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 /**
@@ -47,18 +44,16 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
             // 获取月度报表, 即获取上个月的报表
             case MONTH -> {
                 var now = LocalDate.now();
-                var prevYearMonth = YearMonth.from(now.getMonth().minus(1));
-                LocalDate start = prevYearMonth.atDay(1), end = prevYearMonth.atEndOfMonth();
+                LocalDate start = now.minusDays(30); // 从今天向前减 30 天
                 var lqw = new LambdaQueryWrapper<Request>();
-                lqw.between(Request::getStartTime, start, end);
+                lqw.between(Request::getStartTime, start, now);
                 return this.list(lqw);
             }
             case WEEK -> {
                 var now = LocalDate.now();
-                LocalDate start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
-                        end = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                LocalDate start = now.minusDays(6); // 从今天向前减 6 天
                 var lqw = new LambdaQueryWrapper<Request>();
-                lqw.between(Request::getStartTime, start, end);
+                lqw.between(Request::getStartTime, start, now);
                 return this.list(lqw);
             }
             case DAY -> {
@@ -71,7 +66,8 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
         }
         return null;
     }
-    public List<Request> getRoomRequestList(Long roomId){
+
+    public List<Request> getRoomRequestList(Long roomId) {
         LambdaQueryWrapper<Request> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Request::getRoomId, roomId);
         return this.list(lqw);
