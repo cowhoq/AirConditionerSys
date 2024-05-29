@@ -8,22 +8,22 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class SlaveStatus {
-    Long roomId;
+    private Long roomId;
 
-    Integer curTemp;
+    private Integer curTemp;
 
-    Integer setTemp;
+    private Integer setTemp;
 
     /**
      * 从机与主机的状态, 取值: "正常", "离线", "关机"
      */
-    String status;
+    private String status;
 
-    String mode;
+    private String mode;
 
-    String wind;
+    private String wind;
 
-    LocalDateTime registeredTime;
+    private LocalDateTime registeredTime;
 
     public SlaveStatus(Long roomId, LocalDateTime registeredTime) {
         this.roomId = roomId;
