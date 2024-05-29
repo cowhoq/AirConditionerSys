@@ -23,6 +23,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
+@RequestMapping({"/api", ""})
 public class SlaveController {
     @Autowired
     private MasterService masterService;

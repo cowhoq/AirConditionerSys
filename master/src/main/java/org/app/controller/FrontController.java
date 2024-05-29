@@ -23,7 +23,8 @@ import java.util.List;
  * @date 2024-5-15 16:25
  */
 @Slf4j
-@RestController
+@RestController()
+@RequestMapping({"/api", ""})
 public class FrontController {
     @Autowired
     private MasterService masterService;
