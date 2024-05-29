@@ -23,6 +23,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+/*    implementation ("org.graalvm.sdk:graal-sdk:最新版本号")*/
 }
 
 tasks.withType<Test> {

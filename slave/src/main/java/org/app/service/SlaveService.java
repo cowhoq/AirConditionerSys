@@ -33,7 +33,7 @@ public class SlaveService {
 
     private static final Integer NOW_TEMP = 2800; // 室外温度, 室内温度会向其靠拢
 
-    public static final String BASE_URL = "http://10.29.22.40:8080";
+    public static final String BASE_URL = "http://10.29.223.8:8080";
 
     private static int second = 15;
 
@@ -84,7 +84,7 @@ public class SlaveService {
         return wind.get();
     }
 
-    public Boolean powerOn() {
+    public Boolean  powerOn() {
         var restTemplate = new RestTemplate();
         var requestEntity
                 = getRequestEntity(ROOM_ID, setTemp.get(), curTemp.get(), mode.get());

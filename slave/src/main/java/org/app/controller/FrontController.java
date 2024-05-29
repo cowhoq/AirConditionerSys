@@ -28,7 +28,8 @@ import java.util.List;
 public class FrontController {
     @Autowired
     SlaveService slaveService;
-
+    @Autowired
+    LoginController loginController;
     /**
      * 获取从机状态
      */
@@ -53,7 +54,7 @@ public class FrontController {
     @PostMapping("PowerOff")
     public R<Status> powerOff() {
         SlaveService.setStatus(Status.OFF);
-        slaveService.powerOff();
+        loginController.logout(SlaveService.ROOM_ID);
         return R.success(SlaveService.getStatus());
     }
 
