@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static org.app.MasterApplication.TEST;
+
 /**
  * 前台登录, 结账窗口
  *
