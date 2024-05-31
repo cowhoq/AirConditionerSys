@@ -168,7 +168,7 @@ public class SlaveService {
 
         // 
         if (status.get().equals(Status.AUTO_OFF)) {
-            if (NOW_TEMP - setTemp.get() >= 100 && powerOn()) {
+            if (curTemp.get() - setTemp.get() >= 100 && powerOn()) {
                 status.set(Status.ON);
             }
         }
@@ -183,7 +183,6 @@ public class SlaveService {
                     var speed = getSpeed(mode.get());
                     var adjustment = (curTemp.get() > setTemp.get()) ? -speed : speed;
                     curTemp.addAndGet(adjustment);
-
                     // 检查是否可以关机
                     if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
                         status.set(Status.AUTO_OFF);
