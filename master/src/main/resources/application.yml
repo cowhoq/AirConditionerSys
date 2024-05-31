@@ -1,4 +1,7 @@
 spring:
+    devtools:
+        restart:
+            enabled: false
     application:
         name: master
     datasource:

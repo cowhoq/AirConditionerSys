@@ -38,15 +38,6 @@ public class SlaveStatus {
         this.registeredTime = registeredTime;
     }
 
-    public SlaveStatus(Long roomId, Integer curTemp, Integer setTemp, String status, String mode, LocalDateTime registeredTime) {
-        this.roomId = roomId;
-        this.curTemp = curTemp;
-        this.setTemp = setTemp;
-        this.status = status;
-        this.mode = mode;
-        this.registeredTime = registeredTime;
-    }
-
     public void addEnergy(BigDecimal energy) {
         this.energy = this.energy.add(energy);
     }

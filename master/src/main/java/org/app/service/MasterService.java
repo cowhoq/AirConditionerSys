@@ -162,28 +162,30 @@ public class MasterService {
      * 相当于`slavePowerOn` 与 `slaveChangeParams` 合并了
      *
      * @param newRequest 从机的请求
-     * @return 处理成功返回 true, 否则返回 false
+     * @return 处理成功返回返回上一次请求所消耗的费用
+     * (如果没有上一次的请求, 则返回 [0, 0]), 否则返回 null
      */
     @CheckWorkMode
-    public Boolean slaveRequest(Request newRequest) {
+    public List<BigDecimal> slaveRequest(Request newRequest) {
         // 判断请求队列是否有请求
         var oldRequest = getRequest(newRequest.getRoomId());
 
         if (oldRequest == null) {
             if (!checkRequestTemp(newRequest))
-                return false;
+                return null;
             newRequest.setStartTime(LocalDateTime.now());
             requestList.add(newRequest);
-            return true;
+            return new ArrayList<>(Arrays.asList(BigDecimal.ZERO, BigDecimal.ZERO));
         } else {
             if (checkRequestTemp(newRequest)) { // 温度校验合格
-                calcFeeAndSave(oldRequest);
                 newRequest.setStartTime(LocalDateTime.now());
                 requestList.add(newRequest);
-                return true;
+                // 存入旧的请求时, 更改旧请求的停止温度, 验收时查出来的小错误
+                oldRequest.setStopTemp(newRequest.getStartTemp());
+                return calcFeeAndSave(oldRequest);
             } else {
                 requestList.add(oldRequest);
-                return false;
+                return null;
             }
         }
     }

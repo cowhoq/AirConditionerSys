@@ -51,6 +51,9 @@ public class SlaveStatusService {
             var slaveStatus = slaveStatusMap.get(roomId);
             slaveStatus.setStatus("关机");
             slaveStatus.setRegisteredTime(LocalDateTime.now());
+            // 用户如果登出, 则需要重置费用和能量
+            slaveStatus.setEnergy(new BigDecimal(0));
+            slaveStatus.setFee(new BigDecimal(0));
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
@@ -76,7 +79,12 @@ public class SlaveStatusService {
     public void updateSlaveStatus(Long roomId, Integer curTemp, Integer setTemp, String status, String mode) {
         if (this.isRegistered(roomId)) {
             // 如果存在则直接构造一个新的对象
-            var slaveStatus = new SlaveStatus(roomId, curTemp, setTemp, status, mode, LocalDateTime.now());
+            var slaveStatus = slaveStatusMap.get(roomId);
+            slaveStatus.setCurTemp(curTemp);
+            slaveStatus.setSetTemp(setTemp);
+            slaveStatus.setStatus(status);
+            slaveStatus.setMode(mode);
+            slaveStatus.setRegisteredTime(LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
@@ -125,10 +133,9 @@ public class SlaveStatusService {
                 log.error("从机 {} 超时, 离线", roomId);
                 entry.getValue().setStatus("离线");
                 var list = masterService.slavePowerOff(roomId);
-                if (list != null) {
-                    BigDecimal energy = list.get(0), fee = list.get(1);
-                    this.updateSlaveEnergyAndFee(roomId, energy, fee);
-                }
+                if (list != null)
+                    this.updateSlaveEnergyAndFee(roomId, list.get(0), list.get(1));
+
                 var room = roomService.getById(roomId);
                 room.setInuse(false);
                 roomService.updateById(room);

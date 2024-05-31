@@ -105,9 +105,12 @@ public class SlaveController {
         request.setStopTemp(setTemp);
         request.setStartTemp(curTemp);
         request.setFanSpeed(mode);
-        if (masterService.slaveRequest(request))
+        // 收到从机的新请求时, 记得也要更新一下从机能量和费用
+        var list = masterService.slaveRequest(request);
+        if (list != null) {
+            slaveStatusService.updateSlaveEnergyAndFee(roomId, list.get(0), list.get(1));
             return R.success(null);
-        else {
+        } else {
             log.error("添加请求失败");
             return R.error(null);
         }
