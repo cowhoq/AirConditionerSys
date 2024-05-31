@@ -194,7 +194,7 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 获取的请求
      */
-    public Request getRequest(Long roomId) {
+    private Request getRequest(Long roomId) {
         var indexOpt = IntStream.range(0, requestList.size()).
                 filter(i -> Objects.equals(requestList.get(i).getRoomId(), roomId)).
                 findFirst();
@@ -209,19 +209,24 @@ public class MasterService {
      * 计算一个请求的总花费并写入数据库
      *
      * @param request 请求
+     * @return 返回一个包含 energy, fee 的 list
      */
     @CheckWorkMode
-    private void calcFeeAndSave(Request request) {
+    private List<BigDecimal> calcFeeAndSave(Request request) {
         request.setStopTime(LocalDateTime.now());
         var seconds = Duration.between(request.getStartTime(), request.getStopTime()).toSeconds();
         var minutes = seconds / 60;
         if (seconds % 60 > 0)
             minutes++;
-        request.setTotalFee(new BigDecimal(minutes * fanCost.get(request.getFanSpeed())));
+        var energy = new BigDecimal(minutes * fanCost.get(request.getFanSpeed()));
+        var fee = energy.multiply(new BigDecimal(5));
+        request.setTotalFee(fee);
+
         var roomId = request.getRoomId();
         var userId = roomService.getById(roomId).getUserId();
         request.setUserId(userId);
         requestService.save(request);
+        return new ArrayList<>(List.of(energy, fee));
     }
 
 
@@ -234,12 +239,11 @@ public class MasterService {
      * @return 如果从机在请求列表中，则返回 true, 否则返回 false
      */
     @CheckWorkMode
-    public Boolean slavePowerOff(Long roomId) {
+    public List<BigDecimal> slavePowerOff(Long roomId) {
         var request = getRequest(roomId);
         if (request == null)
-            return false;
-        calcFeeAndSave(request);
-        return true;
+            return null;
+        return calcFeeAndSave(request);
     }
 
     /**

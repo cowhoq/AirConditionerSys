@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 控制器类，管理从属设备的请求
@@ -118,7 +120,9 @@ public class SlaveController {
     @PostMapping("/OffSlaverPower")
     public R<Boolean> slavePowerOff(Long roomId) {
         log.info("从机请求关闭: {}", roomId);
-        if (masterService.slavePowerOff(roomId)) {
+        var list = masterService.slavePowerOff(roomId);
+        if (list != null) {
+            slaveStatusService.updateSlaveEnergyAndFee(roomId, list.get(0), list.get(1));
             slaveStatusService.updateId(roomId);
             return R.success(true);
         }
@@ -151,6 +155,20 @@ public class SlaveController {
      */
     @PostMapping("/slaveFee")
     public R<List<BigDecimal>> slaveFee(Long roomId) {
-        return R.success(masterService.getEnergyAndFee(roomId));
+        if (roomId == null)
+            return R.error("参数错误");
+        log.info("从机({})获取当前能量和费用", roomId);
+        var current = masterService.getEnergyAndFee(roomId);
+        var history = slaveStatusService.getEnergyAndFee(roomId);
+        // 如果有历史和现在数据, 则将二者相加,
+        // 如果只有历史数据则返回历史数据,
+        // 如果只有现在数据则返回现在数据,
+        // 如果两者都没有数据则返回 0
+        if (current != null && history != null)
+            return R.success(new ArrayList<>(List.of(current.get(0).add(history.get(0)), current.get(1).add(history.get(1)))));
+        else
+            return R.success(Objects.requireNonNullElseGet(current,
+                    () -> Objects.requireNonNullElseGet(history,
+                            () -> new ArrayList<>(List.of(new BigDecimal(0), new BigDecimal(0))))));
     }
 }
