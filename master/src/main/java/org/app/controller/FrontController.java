@@ -72,15 +72,15 @@ public class FrontController {
 
         var request = new WorkStatus();
         if (workMode.equals("HEATING"))
-            request.setWorkmode(WorkMode.HEATING);
+            masterService.setWorkMode(WorkMode.HEATING);
         else if (workMode.equals("REFRIGERATION"))
-            request.setWorkmode(WorkMode.REFRIGERATION);
+            masterService.setWorkMode(WorkMode.REFRIGERATION);
         else
             return R.error("参数错误");
 
-        var range = new ArrayList<>(List.of(firstValue, secondValue));
+        var range = new ArrayList<>(List.of(firstValue * 100, secondValue * 100));
+        masterService.setRange(range);
         request.setRange(range);
-        masterService.powerOn(request.getWorkmode(), request.getRange());
         return R.success("设置成功");
     }
 
@@ -116,7 +116,6 @@ public class FrontController {
                     slaveStatus.setWind("送风");
                 else
                     slaveStatus.setWind("无风");
-                log.info(String.valueOf(slaveStatus));
             }
             return R.success(list);
         }

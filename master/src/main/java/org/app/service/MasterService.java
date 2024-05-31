@@ -48,6 +48,7 @@ public class MasterService {
     private Map<String, Double> fanCost;
 
     @Getter
+    @Setter
     private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
     private List<Integer> range;
@@ -320,6 +321,11 @@ public class MasterService {
     @CheckWorkMode
     public List<Integer> getRange() {
         return range;
+    }
+
+    @CheckWorkMode
+    public void setRange(List<Integer> range) {
+        this.range = range;
     }
 
     @CheckWorkMode

@@ -40,7 +40,7 @@ public class SlaveStatusService {
                 slaveStatusMap.put(roomId, slaveStatus);
             }
         } else {
-            var slaveStatus = new SlaveStatus(roomId, LocalDateTime.now());
+            var slaveStatus = new SlaveStatus(roomId, "正常", LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
