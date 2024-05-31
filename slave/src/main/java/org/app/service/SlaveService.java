@@ -146,12 +146,16 @@ public class SlaveService {
     }
 
     private Integer getSpeed(String mode) {
-        return switch (mode) {
-            case "SLOW" -> LOW_SPEED;
-            case "MEDDLE" -> MID_SPEED;
-            case "FAST" -> HIGH_SPEED;
-            default -> throw new IllegalArgumentException("Invalid mode: " + mode);
-        };
+        switch (mode) {
+            case "SLOW":
+                return LOW_SPEED;
+            case "MEDDLE":
+                return MID_SPEED;
+            case "FAST":
+                return HIGH_SPEED;
+            default:
+                throw new IllegalArgumentException("Invalid mode: " + mode);
+        }
     }
 
     @Scheduled(fixedRate = 1000)
