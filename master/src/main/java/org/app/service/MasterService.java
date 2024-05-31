@@ -96,12 +96,10 @@ public class MasterService {
 
     /**
      * 开机, 并设置运行状态
-     *
-     * @return 开机成功返回 true, 否则返回 false
      */
-    public Boolean powerOn(WorkMode workMode, List<Integer> range) {
+    public void powerOn(WorkMode workMode, List<Integer> range) {
         if (this.workMode != WorkMode.OFF)
-            return false;
+            return;
         getDefaultParams();
         this.workMode = WorkMode.REFRIGERATION;
         this.range = refrigerationDefaultTemp;
@@ -123,12 +121,9 @@ public class MasterService {
 
     /**
      * 关机
-     *
-     * @return 关机成功返回 true, 否则返回 false
      */
-    public Boolean powerOff() {
+    public void powerOff() {
         this.workMode = WorkMode.OFF;
-        return true;
     }
 
     /**
@@ -299,6 +294,7 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 消耗的能量和金额
      */
+    @CheckWorkMode
     public List<BigDecimal> getEnergyAndFee(Long roomId) {
         var optionalRequest = requestList.stream().filter(i -> i.getRoomId().equals(roomId)).findFirst();
 
