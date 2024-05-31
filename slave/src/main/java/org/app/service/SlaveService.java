@@ -45,7 +45,7 @@ public class SlaveService {
 
     private final AtomicReference<String> mode = new AtomicReference<>("FAST"); // 设定风速
 
-    private AtomicReference<Boolean> wind = new AtomicReference<>(false);
+    private final AtomicReference<Boolean> wind = new AtomicReference<>(false);
 
     public static void setStatus(Status _status) {
         status.set(_status);
@@ -146,16 +146,12 @@ public class SlaveService {
     }
 
     private Integer getSpeed(String mode) {
-        switch (mode) {
-            case "SLOW":
-                return LOW_SPEED;
-            case "MEDDLE":
-                return MID_SPEED;
-            case "FAST":
-                return HIGH_SPEED;
-            default:
-                throw new IllegalArgumentException("Invalid mode: " + mode);
-        }
+        return switch (mode) {
+            case "SLOW" -> LOW_SPEED;
+            case "MEDDLE" -> MID_SPEED;
+            case "FAST" -> HIGH_SPEED;
+            default -> throw new IllegalArgumentException("Invalid mode: " + mode);
+        };
     }
 
     @Scheduled(fixedRate = 1000)
@@ -178,7 +174,7 @@ public class SlaveService {
             // 主机允许送风
             var _wind = needWind();
             if (_wind != null) {
-                wind = new AtomicReference<>(_wind);
+                wind.set(_wind);
                 if (_wind) {
                     // 根据设定的风速获取温度变化速度
                     var speed = getSpeed(mode.get());
@@ -188,7 +184,7 @@ public class SlaveService {
                     // 检查是否可以关机
                     if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
                         status.set(Status.AUTO_OFF);
-                        wind = new AtomicReference<>(false);
+                        wind.set(false);
                         second = 16; // 等待 16 下才能再开机
                     }
                     log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
@@ -198,18 +194,5 @@ public class SlaveService {
         }
 
     }
-
-    /*@Scheduled(fixedRate = 1000)
-    public void cheak(){
-        var restTemplate = new RestTemplate();
-        var response = restTemplate.exchange(SlaveService.BASE_URL + "/health",
-                HttpMethod.GET, null, R.class);
-        var r = response.getBody();
-        if(r == null){
-            log.info("wrong");
-        }
-        changeCurTemp();
-    }
-*/
 }
 
