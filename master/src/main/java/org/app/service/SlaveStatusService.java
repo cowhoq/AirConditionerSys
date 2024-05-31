@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -40,7 +41,7 @@ public class SlaveStatusService {
                 slaveStatusMap.put(roomId, slaveStatus);
             }
         } else {
-            var slaveStatus = new SlaveStatus(roomId, LocalDateTime.now());
+            var slaveStatus = new SlaveStatus(roomId, "正常", LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
@@ -69,16 +70,37 @@ public class SlaveStatusService {
         return slaveStatusMap.containsKey(roomId);
     }
 
+    /**
+     * 更新除去能量和费用以外的其他参数
+     */
     public void updateSlaveStatus(Long roomId, Integer curTemp, Integer setTemp, String status, String mode) {
         if (this.isRegistered(roomId)) {
-            // 如果存在则直接构造一个新的对象, wind 传空字符串 (我想应该不要紧)
-            var slaveStatus = new SlaveStatus(roomId, curTemp, setTemp, status, mode, "", LocalDateTime.now());
+            // 如果存在则直接构造一个新的对象
+            var slaveStatus = new SlaveStatus(roomId, curTemp, setTemp, status, mode, LocalDateTime.now());
+            slaveStatusMap.put(roomId, slaveStatus);
+        }
+    }
+
+    /**
+     * 更新能量和费用
+     */
+    public void updateSlaveEnergyAndFee(Long roomId, BigDecimal energy, BigDecimal fee) {
+        if (this.isRegistered(roomId)) {
+            var slaveStatus = slaveStatusMap.get(roomId);
+            slaveStatus.addEnergy(energy);
+            slaveStatus.addFee(fee);
+            slaveStatus.setRegisteredTime(LocalDateTime.now());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }
 
     public List<SlaveStatus> getSlaveStatusList() {
         return new ArrayList<>(slaveStatusMap.values());
+    }
+
+    public List<BigDecimal> getEnergyAndFee(Long roomId) {
+        var slaveStatus = slaveStatusMap.get(roomId);
+        return slaveStatus == null ? null : Arrays.asList(slaveStatus.getEnergy(), slaveStatus.getFee());
     }
 
     /**
@@ -102,7 +124,11 @@ public class SlaveStatusService {
                 }
                 log.error("从机 {} 超时, 离线", roomId);
                 entry.getValue().setStatus("离线");
-                masterService.slavePowerOff(roomId);
+                var list = masterService.slavePowerOff(roomId);
+                if (list != null) {
+                    BigDecimal energy = list.get(0), fee = list.get(1);
+                    this.updateSlaveEnergyAndFee(roomId, energy, fee);
+                }
                 var room = roomService.getById(roomId);
                 room.setInuse(false);
                 roomService.updateById(room);
