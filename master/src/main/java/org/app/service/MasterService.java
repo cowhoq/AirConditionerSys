@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static java.lang.System.exit;
+import static org.app.MasterApplication.TEST;
 
 
 /**
@@ -63,9 +64,6 @@ public class MasterService {
      */
     private Set<Long> sendAirRoomId;
 
-    @Setter
-    @Value("${master.TEST}")
-    private Boolean TEST = false;
 
 
     @PostConstruct
@@ -119,9 +117,7 @@ public class MasterService {
         // 设置为线程安全性的集合
         this.requestList = Collections.synchronizedList(new LinkedList<>());
         this.sendAirRoomId = Collections.synchronizedSet(new HashSet<>());
-        log.info("主机启动成功!");
-        log.info("主机工作参数: {}, {}, {}", this.workMode, this.range, fanCost.entrySet());
-        return true;
+        log.info("主机启动成功! 主机工作参数: {}, {}, {}", this.workMode, this.range, fanCost.entrySet());
     }
 
 

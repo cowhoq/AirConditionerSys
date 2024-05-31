@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.app.MasterApplication.TEST;
+
 /**
  * 前端交互类
  *
@@ -66,7 +68,8 @@ public class FrontController {
      */
     @PostMapping("/setWorkStatus")
     public R<String> setWorkMode(String workMode, Integer firstValue, Integer secondValue) {
-        log.info("收到的参数: {}, {}, {}", workMode, firstValue, secondValue);
+        if (TEST)
+            log.info("收到的参数: {}, {}, {}", workMode, firstValue, secondValue);
         if (workMode == null || firstValue == null || secondValue == null)
             return R.error("参数错误");
 

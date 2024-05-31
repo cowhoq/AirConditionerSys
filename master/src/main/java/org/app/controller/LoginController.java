@@ -43,7 +43,8 @@ public class LoginController {
     public R<String> register(Long userId, String name, Long roomId) {
         if (name == null || roomId == null)
             return R.error("参数错误");
-        log.info("{}, {}", name, roomId);
+        if (TEST)
+            log.info("{}, {}", name, roomId);
         var room = roomService.getById(roomId);
         if (room != null)
             return R.error("房间已有人使用");

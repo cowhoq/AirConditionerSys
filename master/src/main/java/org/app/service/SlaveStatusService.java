@@ -14,6 +14,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.app.MasterApplication.TEST;
+
 /**
  * 从机状态管理
  */
@@ -98,6 +100,8 @@ public class SlaveStatusService {
             slaveStatus.addEnergy(energy);
             slaveStatus.addFee(fee);
             slaveStatus.setRegisteredTime(LocalDateTime.now());
+            if (TEST)
+                log.info("更新从机({}), 当前历史能量和费用为: {}, {}", roomId, slaveStatus.getEnergy(), slaveStatus.getFee());
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }

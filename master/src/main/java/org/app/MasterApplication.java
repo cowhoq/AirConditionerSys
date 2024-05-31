@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableAspectJAutoProxy
 public class MasterApplication {
+    public static Boolean TEST = false;
 
     public static void main(String[] args) {
         SpringApplication.run(MasterApplication.class, args);

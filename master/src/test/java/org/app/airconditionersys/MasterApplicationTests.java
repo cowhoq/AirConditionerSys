@@ -20,7 +20,6 @@ class MasterApplicationTests {
             log.error("主机尚未启动, 测试AOP成功");
         }
         masterService.powerOn(null, null);
-        masterService.setTEST(true);
         log.info("测试能否正确从主机中获取工作温度: {}", masterService.getRange());
     }
 

@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.app.MasterApplication.TEST;
+
 /**
  * 控制器类，管理从属设备的请求
  *
@@ -141,7 +143,6 @@ public class SlaveController {
      */
     @PostMapping("/sendAir")
     public R<Boolean> sendAir(Long roomId, Integer setTemp, Integer curTemp, String mode) {
-        log.info("收到来自从机的查询: {}", roomId);
         if (roomId == null)
             return R.success(false);
         if (roomId == null || setTemp == null || curTemp == null || mode == null)
@@ -149,7 +150,8 @@ public class SlaveController {
         slaveStatusService.updateId(roomId);
         slaveStatusService.updateSlaveStatus(roomId, curTemp, setTemp, "正常", mode);
         var r = masterService.contains(roomId);
-        log.info("收到来自从机的查询: {}, 查询结果: {}", roomId, r);
+        if (TEST)
+            log.info("收到来自从机的查询: {}, 查询结果: {}", roomId, r);
         return R.success(r);
     }
 
@@ -160,7 +162,7 @@ public class SlaveController {
     public R<List<BigDecimal>> slaveFee(Long roomId) {
         if (roomId == null)
             return R.error("参数错误");
-        log.info("从机({})获取当前能量和费用", roomId);
+        // log.info("从机({})获取当前能量和费用", roomId);
         var current = masterService.getEnergyAndFee(roomId);
         var history = slaveStatusService.getEnergyAndFee(roomId);
         // 如果有历史和现在数据, 则将二者相加,
