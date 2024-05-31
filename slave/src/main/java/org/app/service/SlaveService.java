@@ -188,7 +188,8 @@ public class SlaveService {
                     // 检查是否可以关机
                     if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
                         status.set(Status.AUTO_OFF);
-                        second = 15; // 等待 15 下才能再开机
+                        wind = new AtomicReference<>(false);
+                        second = 16; // 等待 16 下才能再开机
                     }
                     log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
                 }
