@@ -166,10 +166,9 @@ public class SlaveService {
         if (curTemp.get() >= NOW_TEMP)
             curTemp.addAndGet(-CHANGE_TEMP);
 
-        // 如果是自动停机, 则等待 15 下(因为计数单位不一定是秒, 所以使用 "下" 这个字)
+        // 
         if (status.get().equals(Status.AUTO_OFF)) {
-            second--;
-            if (second <= 0 && powerOn()) {
+            if (NOW_TEMP - setTemp.get() >= 100 && powerOn()) {
                 status.set(Status.ON);
             }
         }
@@ -189,7 +188,6 @@ public class SlaveService {
                     if (checkPowerOff(curTemp.get(), speed) && powerOff()) {
                         status.set(Status.AUTO_OFF);
                         wind.set(false);
-                        second = 16; // 等待 16 下才能再开机
                     }
                     log.info(curTemp + ";" + setTemp + ";" + status + ";" + second);
                 }
