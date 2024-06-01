@@ -11,16 +11,16 @@ export default new Vuex.Store({
     currentTemperature: '',
     targetTemperature: '',
     mode: 'cool',
-    targetMode: 'cool',
-    currentCost: 0,
+    cost: 0,
     roomNumber: '',
     airConditioning: false,
-    fanSpeed: 'medium',
-    currentHostTemperature: 22,
-    currentHostMode: 'cool',
+    fanSpeed: 'FAST',
+    hostTemperatureLow: 18,
+    hostTemperatureHigh: 25,
+    hostMode: '',
     Host: true,
     energy: 0,
-    fanMode: 'yes',
+    fanStatus: 'yes',
   },
   mutations: {
     TOGGLE_AIR_CONDITIONING(state) {
@@ -34,7 +34,10 @@ export default new Vuex.Store({
       state.targetTemperature = payload.targetTemp;
     },
     UPDATE_COST(state, cost) {
-      state.currentCost = cost;
+      state.cost = cost;
+    },
+    UPDATE_ENERGY(state, energy) {
+      state.energy = energy;
     },
     SET_CURRENT_TEMPERATURE(state, payload) {
       state.currentTemperature = payload;
@@ -42,14 +45,21 @@ export default new Vuex.Store({
     SET_FAN_SPEED(state, speed) {
       state.fanSpeed = speed;
     },
-    SET_CURRENT_HOST_TEMPERATURE(state, payload) {
-      state.currentHostTemperature = payload;
-    },
-    SET_CURRENT_HOST_MODE(state, payload) {
-      state.currentHostMode = payload;
-    },
     SET_TARGET_TEMPERATURE(state, temperature) {
       state.targetTemperature = temperature;
+    },
+    SET_HOST_MODE(state, payload) {
+      console.log('SET_CURRENT_HOST_MODE', payload);
+      state.hostMode = payload;
+    },
+    SET_HOST_TEMPERATURE_LOW(state, payload) {
+      state.hostTemperatureLow = payload;
+    },
+    SET_HOST_TEMPERATURE_HIGH(state, payload) {
+      state.hostTemperatureHigh = payload;
+    },
+    SET_FAN_STATUS(state, payload) {
+      state.fanStatus = payload;
     },
   },
   actions: {
@@ -120,9 +130,12 @@ export default new Vuex.Store({
         console.error('Failed to decrease temperature', error);
       }
     },
-    async changeFanSpeed({ state }, newSpeed) {
+    async changeFanSpeed({ state }) {
+      console.log('changeFanSpeed', state.fanSpeed);
       try {
-        const response = await axios.post(`${BASE_URL}/changeFanSpeed`, { params: { roomNumber: state.roomNumber, fanSpeed: newSpeed }});
+        const response = await axios.post(`${BASE_URL}/changeSpeed`, null, {
+          params: { newSpeed: state.fanSpeed }
+        });
         console.log('Fan speed changed', response.data);
       } catch (error) {
         console.error('Failed to change fan speed', error);
@@ -130,7 +143,7 @@ export default new Vuex.Store({
     },
     async getFee({ state, commit }) {
       try {
-        const response = await axios.get(`${BASE_URL}/getFee`, { params: { roomNumber: state.roomNumber } });
+        const response = await axios.post(`${BASE_URL}/getFee`, null, { params: { roomNumber: state.roomNumber } });
         console.log('Fee retrieved', response.data);
         commit('UPDATE_COST', response.data.data);
       } catch (error) {
@@ -139,12 +152,51 @@ export default new Vuex.Store({
     },
     async getCurrentTemperature({ state, commit }) {
       try {
-        console.log("state.roomNumber", state.roomNumber);
         const response = await axios.post(`${BASE_URL}/curTemp`, { params: { roomNumber: state.roomNumber } });
-        console.log('Current temperature retrieved', response.data);
+        //console.log('Current temperature retrieved', response.data);
         commit('SET_CURRENT_TEMPERATURE', response.data.data);
       } catch (error) {
         console.error('Failed to get current temperature', error);
+      }
+    },
+    async getMasterStatus({commit}) {
+      try {
+        const response = await axios.get(`${BASE_URL}/getMasterStatus`);
+        console.log('Master status retrieved', response.data.data.workmode);
+        commit('SET_HOST_TEMPERATURE_LOW', response.data.data.range[0]/100);
+        commit('SET_HOST_TEMPERATURE_HIGH', response.data.data.range[1]/100);
+        commit('SET_HOST_MODE', response.data.data.workmode);
+      } catch (error) {
+        console.warn('Failed to get master status', error);
+        console.error('Failed to get master status', error);
+      }
+    },
+    async getFanStatus({commit}) {
+      try {
+        const response = await axios.get(`${BASE_URL}/wind`);
+        console.log('Fan mode retrieved', response.data.data);
+        commit('SET_FAN_STATUS', response.data.data);
+      } catch (error) {
+        console.error('Failed to get fan mode', error);
+      }
+    },
+    async getFeeAndEnergy({ state, commit }) {
+      try {
+        const response = await axios.post(`${BASE_URL}/getFee`, null, { params: { roomId: state.roomNumber } });
+        console.log('Fee and energy retrieved', response);
+        commit('UPDATE_COST', response.data.data[1]);  
+        commit('UPDATE_ENERGY', response.data.data[0]);
+      } catch (error) {
+        console.error('Failed to get fee and energy', error);
+      }
+    },
+    async logout({ state, commit }) {
+      try {
+        const response = await axios.post(`${BASE_URL}/logout`, null, { params: { roomId: state.roomNumber } });
+        console.log('Logout', response.data);
+        commit('SET_ROOM_NUMBER', '');
+      } catch (error) {
+        console.error('Failed to logout', error);
       }
     },
   },
@@ -156,9 +208,12 @@ export default new Vuex.Store({
     targetMode: state => state.targetMode,
     currentCost: state => state.currentCost,
     fanSpeed: state => state.fanSpeed,
-    currentHostTemperature: state => state.currentHostTemperature,
-    currentHostMode: state => state.currentHostMode,
+    hostTemperatureLow: state => state.hostTemperatureLow,
+    hostTemperatureHigh: state => state.hostTemperatureHigh,
+    hostMode: state => state.hostMode,
     mode: state => state.mode,
     Host: state => state.Host,
+    fanStatus: state => state.fanStatus,
+    cost: state => state.currentCost,
   }
 });

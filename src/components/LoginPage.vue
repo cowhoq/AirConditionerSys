@@ -36,7 +36,7 @@ export default {
         params: {
           roomId: this.roomNumber,
           name: this.idNumber,
-          password: 'czl'
+          password: '123456'
         }
       })
       console.log('Response status:', r);

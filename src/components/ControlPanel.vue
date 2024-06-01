@@ -8,7 +8,7 @@
       </div>
       <div class="cost-info">
         <label for="room-id" class="room-label">当前费用: </label>
-        <span class="room-number">{{ currentCost }}¥</span>
+        <span class="room-number">{{ fee }}¥</span>
       </div>
       <div class = "energy-info">
         <label for="room-id" class="room-label">能耗：</label>
@@ -23,8 +23,11 @@
         </div>
         <div class="right-panel">
           <TemperatureControl />
-        </div>
+        </div>       
       </div>
+      <div v-else>
+        <button @click="logout" class="logout-button">退出</button> 
+      </div>      
     </main>
   </div>
 </template>
@@ -50,16 +53,23 @@ export default {
         alert('host is not true');
         return false;
       }
-      this.$store.dispatch('toggleAirConditioning');  // 使用 Vuex action
+      this.$store.dispatch('toggleAirConditioning');  
+      this.intervalId = setInterval(() => {
+        this.$store.dispatch('getFeeAndEnergy');
+      }, 1000);
+        
+    },
+    logout() {
+      this.$store.dispatch('logout');
+      clearInterval(this.intervalId);
+      this.$router.push('/');
     }
   },
   computed: {
     roomNumber() {
-      // 从 store 中获取房间号
       return this.$store.state.roomNumber;
     },
     state() {
-        // 从 store 中获取空调开启/关闭状态
         return this.$store.state.airConditioning;
     },
     Host() {
@@ -68,9 +78,8 @@ export default {
     energy() {
       return this.$store.state.energy;
     },
-    currentCost() {
-      this.$store.dispatch('getFee');
-      return this.$store.state.currentCost;
+    fee() {
+      return this.$store.state.cost;
     }
   }
 }

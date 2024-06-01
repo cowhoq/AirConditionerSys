@@ -1,48 +1,67 @@
 <template>
   <div>
     <h3 v-if="currentTemperature === null">加载中...</h3>
-    <h3 v-else class="temperature">当前温度: {{ currentTemperature }}°C</h3>
-    <h3 class="host-temperature">主机温度: {{ currentHostTemperature }}°C</h3>
-    <h3 class="host-mode">主机工作模式： {{ currentHostMode }} </h3>
-    <h3 class="fan-mode">送风状态：{{ fanMode }}</h3>
+    <h3 v-else class="temperature">当前温度: {{ currentTemperature / 100 }}°C</h3>
+    <h3 class="host-temperature">主机温度: {{ hostTemperatureLow + '~' + hostTemperatureHigh }}°C</h3>
+    <h3 class="host-mode">主机工作模式： {{ hostMode === 'REFRIGERATION' ? '制冷' : '制热' }} </h3>
+    <h3 class="fan-mode">送风状态：{{ fanStatus == true ? '开启' : '关闭' }}</h3>
   </div>
 </template>
 
-
 <script>
-
-
 export default {
   data() {
     return {
+      intervals: []
     };
   },
   mounted() {
     console.log('Component mounted, fetching temperature...');
-    this.$store.dispatch('getCurrentTemperature'); // 在组件挂载时获取当前温度
+    
+    // 初始化获取数据
+    this.$store.dispatch('getCurrentTemperature'); 
+    this.$store.dispatch('getMasterStatus');
+    this.$store.dispatch('getFanStatus');
 
-    // 设置每隔一秒获取一次当前温度
-    this.intervalId = setInterval(() => {
+    // 每隔一秒获取一次主机状态
+    this.intervals.push(setInterval(() => {
+      this.$store.dispatch('getMasterStatus');
+    }, 1000));
+    
+    // 每隔一秒获取一次送风状态
+    this.intervals.push(setInterval(() => {
+      this.$store.dispatch('getFanStatus');
+    }, 1000));
+    
+    // 每隔一秒获取一次当前温度
+    this.intervals.push(setInterval(() => {
       this.$store.dispatch('getCurrentTemperature');
-    }, 10000);
+    }, 1000));
+
+    
   },
-  methods: {
-      
+  beforeDestroy() {
+    // 清除所有定时器
+    this.intervals.forEach(intervalId => clearInterval(intervalId));
   },
   computed: {
-    currentHostTemperature() {
-      return this.$store.state.currentHostTemperature;
+    hostTemperatureLow() {
+      return this.$store.state.hostTemperatureLow;
     },
-    currentHostMode() {
-      return this.$store.state.currentHostMode; 
+    hostTemperatureHigh() {
+      return this.$store.state.hostTemperatureHigh;
     },
-    fanMode() {
-      return this.$store.state.fanMode;   
+    hostMode() {
+      return this.$store.state.hostMode; 
+    },
+    fanStatus() {
+      console.log('fanStatus', this.$store.state.fanStatus);
+      return this.$store.state.fanStatus;   
     },
     currentTemperature() {
       return this.$store.state.currentTemperature;
     }
-}
+  }
 }
 </script>
 
@@ -56,17 +75,19 @@ export default {
 .host-temperature,
 .host-mode,
 .loading,
-.fan-mode{
+.fan-mode {
   font-size: 2em;
   font-weight: bold;
   margin: 10px 0;
   padding: 10px;
   border-radius: 8px;
 }
+
 .fan-mode {
   background-color: #e0f7fa;
   color: #00796b;
 }
+
 .temperature {
   background-color: #e0f7fa;
   color: #00796b;
@@ -87,4 +108,3 @@ export default {
   color: #f57f17;
 }
 </style>
-
