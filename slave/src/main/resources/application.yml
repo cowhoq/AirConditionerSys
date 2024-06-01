@@ -1,6 +1,0 @@
-spring:
-    application:
-        name: slave
-server:
-    port: 8081
-
