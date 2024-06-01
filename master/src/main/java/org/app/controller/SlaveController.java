@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.app.aop.CheckLogin;
+import org.app.aop.CheckWorkMode;
 import org.app.common.R;
 import org.app.entity.Request;
 import org.app.service.MasterService;
@@ -53,6 +54,7 @@ public class SlaveController {
      *
      * @return 登录成功后返回从机默认工作温度, 否则返回错误信息
      */
+    @CheckWorkMode
     @PostMapping("/slave-login")
     public R<Integer> login(@NotNull String name, String password, @NotNull Long roomId) {
         password = "123456";
@@ -77,6 +79,7 @@ public class SlaveController {
      * 从机关机请求
      */
     @CheckLogin
+    @CheckWorkMode
     @PostMapping("/slave-logout")
     public R<String> logout(@NotNull Long roomId) {
         var room = roomService.getById(roomId);
@@ -100,6 +103,7 @@ public class SlaveController {
      * TODO: 是否可以直接将参数改为 Request 类型呢? 但是这样又该如何校验里面的参数呢
      */
     @CheckLogin
+    @CheckWorkMode
     @PostMapping("/OnSlaverPower")
     public R<String> slaveRequest(@NotNull Long roomId, @NotNull Integer setTemp, @NotNull Integer curTemp, @NotBlank String mode) {
         log.info("从机请求参数: {}, {}, {}, {}", roomId, setTemp, curTemp, mode);
@@ -124,6 +128,7 @@ public class SlaveController {
      * 从机暂停送风
      */
     @CheckLogin
+    @CheckWorkMode
     @PostMapping("/OffSlaverPower")
     public R<Boolean> slavePowerOff(@NotNull Long roomId) {
         log.info("从机请求关闭: {}", roomId);
@@ -143,6 +148,8 @@ public class SlaveController {
      * @param roomId 从机的 roomId
      * @return 如果在返回 true, 如果不在返回 false
      */
+    @CheckLogin
+    @CheckWorkMode
     @PostMapping("/sendAir")
     public R<Boolean> sendAir(@NotNull Long roomId, @NotNull Integer setTemp, @NotNull Integer curTemp, @NotBlank String mode) {
         slaveStatusService.updateId(roomId);
@@ -156,6 +163,8 @@ public class SlaveController {
     /**
      * 获取当前从机请求费用
      */
+    @CheckLogin
+    @CheckWorkMode
     @PostMapping("/slaveFee")
     public R<List<BigDecimal>> slaveFee(@NotNull Long roomId) {
         // log.info("从机({})获取当前能量和费用", roomId);

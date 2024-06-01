@@ -3,6 +3,7 @@ package org.app.controller;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.app.aop.CheckWorkMode;
 import org.app.common.R;
 import org.app.entity.dto.Period;
 import org.app.entity.Request;
@@ -66,6 +67,7 @@ public class FrontController {
         }
     }
 
+    @CheckWorkMode
     @PostMapping("/setWorkMode")
     public R<String> setWorkMode(@NotBlank String workMode) {
         log.info("设置主机工作模式: {}", workMode);
@@ -79,6 +81,7 @@ public class FrontController {
         return R.success("设置成功");
     }
 
+    @CheckWorkMode
     @PostMapping("/setRange")
     public R<String> setRange(@NotNull Integer firstValue, @NotNull Integer secondValue) {
         log.info("主机工作的温度范围: {}, {}", firstValue * 100, secondValue * 100);
@@ -90,6 +93,7 @@ public class FrontController {
     /**
      * 获取主机工作状态
      */
+    @CheckWorkMode
     @GetMapping("/getWorKMode")
     public R<String> getWorkMode() {
         return R.success(masterService.getWorkMode().toString());
@@ -99,6 +103,7 @@ public class FrontController {
     /**
      * 获取主机工作状态和温度, 主机前端和从机后端共用的函数
      */
+    @CheckWorkMode
     @GetMapping("/getWorkStatus")
     public R<WorkStatus> getWorkStatus() {
         var response = new WorkStatus();
@@ -110,6 +115,7 @@ public class FrontController {
     /**
      * 获取从机状态列表
      */
+    @CheckWorkMode
     @GetMapping("/getSlaveStatus")
     public R<List<SlaveStatus>> getSlaveStatus() {
         var list = slaveStatusService.getSlaveStatusList();
@@ -128,6 +134,7 @@ public class FrontController {
     /**
      * 获取房间报表
      */
+    @CheckWorkMode
     @GetMapping("/getRoomTable")
     public R<List<Request>> getRoomTable(@NotNull Long roomId) {
         var list = requestService.getRoomRequestList(roomId);
@@ -138,6 +145,7 @@ public class FrontController {
     /**
      * 按年月日获取报表
      */
+    @CheckWorkMode
     @GetMapping("/getTable")
     public R<List<Request>> getTable(@NotNull String period) {
         if (period == null)

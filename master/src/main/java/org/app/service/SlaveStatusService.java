@@ -2,7 +2,6 @@ package org.app.service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.app.aop.CheckWorkMode;
 import org.app.entity.dto.SlaveStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +34,6 @@ public class SlaveStatusService {
     @Getter
     private final Map<Long, SlaveStatus> slaveStatusMap = new ConcurrentHashMap<>();
 
-    @CheckWorkMode
     public void register(Long roomId) {
         if (slaveStatusMap.containsKey(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
@@ -50,7 +48,6 @@ public class SlaveStatusService {
         }
     }
 
-    @CheckWorkMode
     public void unregister(Long roomId) {
         if (slaveStatusMap.containsKey(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
@@ -66,7 +63,6 @@ public class SlaveStatusService {
     /**
      * 更新注册状态
      */
-    @CheckWorkMode
     public void updateId(Long roomId) {
         if (this.isRegistered(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
@@ -82,7 +78,6 @@ public class SlaveStatusService {
     /**
      * 更新除去能量和费用以外的其他参数
      */
-    @CheckWorkMode
     public void updateSlaveStatus(Long roomId, Integer curTemp, Integer setTemp, String status, String mode) {
         if (this.isRegistered(roomId)) {
             // 如果存在则直接构造一个新的对象
@@ -99,7 +94,6 @@ public class SlaveStatusService {
     /**
      * 更新能量和费用
      */
-    @CheckWorkMode
     public void updateSlaveEnergyAndFee(Long roomId, BigDecimal energy, BigDecimal fee) {
         if (this.isRegistered(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
@@ -112,7 +106,6 @@ public class SlaveStatusService {
         }
     }
 
-    @CheckWorkMode
     public List<SlaveStatus> getSlaveStatusList() {
         return new ArrayList<>(slaveStatusMap.values());
     }

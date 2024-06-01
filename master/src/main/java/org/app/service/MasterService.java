@@ -3,8 +3,8 @@ package org.app.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.app.aop.CheckWorkMode;
 import org.app.entity.Request;
 import org.app.entity.WorkMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +50,14 @@ public class MasterService {
     @Getter
     private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
+    /**
+     * -- GETTER --
+     *  获取主机工作的温度范围
+     *  <p>
+     *  原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
+     */
+    @Setter
+    @Getter
     private List<Integer> range;
 
     /**
@@ -153,7 +161,6 @@ public class MasterService {
      * @return 处理成功返回返回上一次请求所消耗的费用
      * (如果没有上一次的请求, 则返回 [0, 0]), 否则返回 null
      */
-    @CheckWorkMode
     public List<BigDecimal> slaveRequest(Request newRequest) {
         // 判断请求队列是否有请求
         var oldRequest = getRequest(newRequest.getRoomId());
@@ -227,20 +234,11 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 如果从机在请求列表中，则返回 true, 否则返回 false
      */
-    @CheckWorkMode
     public List<BigDecimal> slavePowerOff(Long roomId) {
         var request = getRequest(roomId);
         if (request == null)
             return null;
         return calcFeeAndSave(request);
-    }
-
-    /**
-     * 获取所有从机状态
-     */
-    @CheckWorkMode
-    public List<Request> getSlaveList() {
-        return requestList;
     }
 
     /**
@@ -290,7 +288,6 @@ public class MasterService {
      * @param roomId 从机的 roomId
      * @return 消耗的能量和金额
      */
-    @CheckWorkMode
     public List<BigDecimal> getEnergyAndFee(Long roomId) {
         var optionalRequest = requestList.stream().filter(i -> i.getRoomId().equals(roomId)).findFirst();
 
@@ -307,22 +304,6 @@ public class MasterService {
         return null;
     }
 
-    /**
-     * 获取主机工作的温度范围
-     * <p>
-     * 原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
-     */
-    @CheckWorkMode
-    public List<Integer> getRange() {
-        return range;
-    }
-
-    @CheckWorkMode
-    public void setRange(List<Integer> range) {
-        this.range = range;
-    }
-
-    @CheckWorkMode
     public Boolean contains(Long roomId) {
         return sendAirRoomId.contains(roomId);
     }
