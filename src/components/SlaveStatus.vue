@@ -8,7 +8,7 @@
     </div>
 
     <el-table :data="slaveStatuses" style="width: 100%">
-      <el-table-column prop="id" label="房间ID" align="center"/>
+      <el-table-column prop="roomId" label="房间ID" align="center"/>
       <el-table-column prop="status" label="工作状态" align="center"/>
       <el-table-column prop="curTemp" label="当前温度" align="center"/>
       <el-table-column prop="setTemp" label="设定温度" align="center"/>
