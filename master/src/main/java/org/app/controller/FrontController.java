@@ -1,5 +1,7 @@
 package org.app.controller;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.entity.dto.Period;
@@ -10,13 +12,12 @@ import org.app.entity.dto.SlaveStatus;
 import org.app.service.MasterService;
 import org.app.service.RequestService;
 import org.app.service.SlaveStatusService;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.app.MasterApplication.TEST;
 
 /**
  * 前端交互类
@@ -25,7 +26,8 @@ import static org.app.MasterApplication.TEST;
  * @date 2024-5-15 16:25
  */
 @Slf4j
-@RestController()
+@Validated
+@RestController
 @RequestMapping({"/api", ""})
 public class FrontController {
     @Autowired
@@ -54,36 +56,34 @@ public class FrontController {
      * 前端-主机关机
      */
     @GetMapping("/powerOff")
-    public R<Void> powerOff() {
+    public R<String> powerOff() {
         try {
             masterService.powerOff();
-            return R.success(null);
+            log.info("主机关机成功");
+            return R.success("主机关机成功");
         } catch (Exception e) {
             return R.error("关机失败");
         }
     }
 
-    /**
-     * 前端设置主机工作状态和温度
-     */
-    @PostMapping("/setWorkStatus")
-    public R<String> setWorkMode(String workMode, Integer firstValue, Integer secondValue) {
-        if (TEST)
-            log.info("收到的参数: {}, {}, {}", workMode, firstValue, secondValue);
-        if (workMode == null || firstValue == null || secondValue == null)
-            return R.error("参数错误");
+    @PostMapping("/setWorkMode")
+    public R<String> setWorkMode(@NotBlank String workMode) {
+        log.info("设置主机工作模式: {}", workMode);
 
-        var request = new WorkStatus();
         if (workMode.equals("HEATING"))
             masterService.setWorkMode(WorkMode.HEATING);
         else if (workMode.equals("REFRIGERATION"))
             masterService.setWorkMode(WorkMode.REFRIGERATION);
         else
             return R.error("参数错误");
+        return R.success("设置成功");
+    }
 
+    @PostMapping("/setRange")
+    public R<String> setRange(@NotNull Integer firstValue, @NotNull Integer secondValue) {
+        log.info("主机工作的温度范围: {}, {}", firstValue * 100, secondValue * 100);
         var range = new ArrayList<>(List.of(firstValue * 100, secondValue * 100));
         masterService.setRange(range);
-        request.setRange(range);
         return R.success("设置成功");
     }
 
@@ -129,7 +129,7 @@ public class FrontController {
      * 获取房间报表
      */
     @GetMapping("/getRoomTable")
-    public R<List<Request>> getRoomTable(Long roomId) {
+    public R<List<Request>> getRoomTable(@NotNull Long roomId) {
         var list = requestService.getRoomRequestList(roomId);
         if (list != null) return R.success(list);
         else return R.error("没有该房间报表！");
@@ -139,7 +139,7 @@ public class FrontController {
      * 按年月日获取报表
      */
     @GetMapping("/getTable")
-    public R<List<Request>> getTable(String period) {
+    public R<List<Request>> getTable(@NotNull String period) {
         if (period == null)
             return R.error("参数错误");
         var list = requestService.getRequestListByPeriod(Period.valueOf(period));

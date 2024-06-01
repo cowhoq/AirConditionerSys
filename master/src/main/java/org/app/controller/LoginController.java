@@ -1,5 +1,6 @@
 package org.app.controller;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.app.common.R;
 import org.app.entity.Request;
@@ -9,6 +10,7 @@ import org.app.service.RequestService;
 import org.app.service.RoomService;
 import org.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +26,8 @@ import static org.app.MasterApplication.TEST;
  * @author zfq
  */
 @Slf4j
-@RestController()
+@Validated
+@RestController
 @RequestMapping({"/api", ""})
 public class LoginController {
     @Autowired
@@ -42,11 +45,10 @@ public class LoginController {
      * @return 注册成功返回用户 id, 以便后续其他功能使用
      */
     @PostMapping("/register")
-    public R<String> register(Long userId, String name, Long roomId) {
-        if (name == null || roomId == null)
-            return R.error("参数错误");
+    public R<String> register(@NotNull Long userId, @NotNull String name, @NotNull Long roomId) {
         if (TEST)
             log.info("{}, {}", name, roomId);
+
         var room = roomService.getById(roomId);
         if (room != null)
             return R.error("房间已有人使用");
@@ -71,7 +73,7 @@ public class LoginController {
      * 根据 roomId 获取用户的账单列表
      */
     @GetMapping("/bill")
-    public R<List<Request>> getBillByRoomId(Long roomId) {
+    public R<List<Request>> getBillByRoomId(@NotNull Long roomId) {
         return R.success(requestService.getRequestListByRoomId(roomId));
     }
 }

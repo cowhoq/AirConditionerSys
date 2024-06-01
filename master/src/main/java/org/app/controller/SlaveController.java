@@ -1,5 +1,7 @@
 package org.app.controller;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.app.aop.CheckLogin;
 import org.app.common.R;
@@ -9,6 +11,7 @@ import org.app.service.RoomService;
 import org.app.service.SlaveStatusService;
 import org.app.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,6 +29,7 @@ import static org.app.MasterApplication.TEST;
  * @date 2024-5-15 16:25
  */
 @Slf4j
+@Validated
 @RestController
 @RequestMapping({"/api", ""})
 public class SlaveController {
@@ -50,9 +54,7 @@ public class SlaveController {
      * @return 登录成功后返回从机默认工作温度, 否则返回错误信息
      */
     @PostMapping("/slave-login")
-    public R<Integer> login(String name, String password, Long roomId) {
-        if (name == null || password == null || roomId == null)
-            throw new IllegalArgumentException("登录参数错误");
+    public R<Integer> login(@NotNull String name, String password, @NotNull Long roomId) {
         password = "123456";
         log.info("从机请求登录({}), name={}, password={}", roomId, name, password);
         if (!userService.login(name, password))
@@ -76,10 +78,9 @@ public class SlaveController {
      */
     @CheckLogin
     @PostMapping("/slave-logout")
-    public R<String> logout(Long roomId) {
+    public R<String> logout(@NotNull Long roomId) {
         var room = roomService.getById(roomId);
-        if (room == null)
-            return R.error("关机失败, roomId 不存在");
+
         if (room.getInuse()) {
             room.setInuse(false);
             roomService.updateById(room);
@@ -95,13 +96,14 @@ public class SlaveController {
 
     /**
      * 接收从机请求, 从机给出的每个参数都不应为 null
+     * <p>
+     * TODO: 是否可以直接将参数改为 Request 类型呢? 但是这样又该如何校验里面的参数呢
      */
     @CheckLogin
     @PostMapping("/OnSlaverPower")
-    public R<String> slaveRequest(Long roomId, Integer setTemp, Integer curTemp, String mode) {
+    public R<String> slaveRequest(@NotNull Long roomId, @NotNull Integer setTemp, @NotNull Integer curTemp, @NotBlank String mode) {
         log.info("从机请求参数: {}, {}, {}, {}", roomId, setTemp, curTemp, mode);
-        if (roomId == null || setTemp == null || curTemp == null || mode == null)
-            return R.error("参数错误");
+
         var request = new Request();
         request.setRoomId(roomId);
         request.setStopTemp(setTemp);
@@ -110,7 +112,7 @@ public class SlaveController {
         // 收到从机的新请求时, 记得也要更新一下从机能量和费用
         var list = masterService.slaveRequest(request);
         if (list != null) {
-            slaveStatusService.updateSlaveEnergyAndFee(roomId, list.get(0), list.get(1));
+            slaveStatusService.updateSlaveEnergyAndFee(request.getRoomId(), list.get(0), list.get(1));
             return R.success(null);
         } else {
             log.error("添加请求失败");
@@ -123,7 +125,7 @@ public class SlaveController {
      */
     @CheckLogin
     @PostMapping("/OffSlaverPower")
-    public R<Boolean> slavePowerOff(Long roomId) {
+    public R<Boolean> slavePowerOff(@NotNull Long roomId) {
         log.info("从机请求关闭: {}", roomId);
         var list = masterService.slavePowerOff(roomId);
         if (list != null) {
@@ -142,11 +144,7 @@ public class SlaveController {
      * @return 如果在返回 true, 如果不在返回 false
      */
     @PostMapping("/sendAir")
-    public R<Boolean> sendAir(Long roomId, Integer setTemp, Integer curTemp, String mode) {
-        if (roomId == null)
-            return R.success(false);
-        if (roomId == null || setTemp == null || curTemp == null || mode == null)
-            return R.error("参数错误");
+    public R<Boolean> sendAir(@NotNull Long roomId, @NotNull Integer setTemp, @NotNull Integer curTemp, @NotBlank String mode) {
         slaveStatusService.updateId(roomId);
         slaveStatusService.updateSlaveStatus(roomId, curTemp, setTemp, "正常", mode);
         var r = masterService.contains(roomId);
@@ -159,16 +157,14 @@ public class SlaveController {
      * 获取当前从机请求费用
      */
     @PostMapping("/slaveFee")
-    public R<List<BigDecimal>> slaveFee(Long roomId) {
-        if (roomId == null)
-            return R.error("参数错误");
+    public R<List<BigDecimal>> slaveFee(@NotNull Long roomId) {
         // log.info("从机({})获取当前能量和费用", roomId);
-        var current = masterService.getEnergyAndFee(roomId);
-        var history = slaveStatusService.getEnergyAndFee(roomId);
-        // 如果有历史和现在数据, 则将二者相加,
-        // 如果只有历史数据则返回历史数据,
-        // 如果只有现在数据则返回现在数据,
-        // 如果两者都没有数据则返回 0
+        /*
+         * 如果有历史和现在数据, 则将二者相加, 如果只有历史数据则返回历史数据,
+         * 如果只有现在数据则返回现在数据, 如果两者都没有数据则返回 0
+         */
+        List<BigDecimal> current = masterService.getEnergyAndFee(roomId),
+                history = slaveStatusService.getEnergyAndFee(roomId);
         if (current != null && history != null)
             return R.success(new ArrayList<>(List.of(current.get(0).add(history.get(0)), current.get(1).add(history.get(1)))));
         else

@@ -3,7 +3,6 @@ package org.app.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.app.aop.CheckWorkMode;
 import org.app.entity.Request;
@@ -49,7 +48,6 @@ public class MasterService {
     private Map<String, Double> fanCost;
 
     @Getter
-    @Setter
     private WorkMode workMode = WorkMode.OFF;   // 给 workMode 添加一个默认值
 
     private List<Integer> range;
@@ -63,7 +61,6 @@ public class MasterService {
      * 保存在一个时间片内可以送风的房间 id
      */
     private Set<Long> sendAirRoomId;
-
 
 
     @PostConstruct
@@ -204,7 +201,6 @@ public class MasterService {
      * @param request 请求
      * @return 返回一个包含 energy, fee 的 list
      */
-    @CheckWorkMode
     private List<BigDecimal> calcFeeAndSave(Request request) {
         request.setStopTime(LocalDateTime.now());
         var seconds = Duration.between(request.getStartTime(), request.getStopTime()).toSeconds();
@@ -329,5 +325,16 @@ public class MasterService {
     @CheckWorkMode
     public Boolean contains(Long roomId) {
         return sendAirRoomId.contains(roomId);
+    }
+
+    /**
+     * 设置主机的工作模式, 设置工作模式的同时也要修改主机的工作温度
+     */
+    public void setWorkMode(WorkMode workMode) {
+        this.workMode = workMode;
+        if (workMode.equals(WorkMode.HEATING))
+            this.range = heatingDefaultTemp;
+        else if (workMode.equals(WorkMode.REFRIGERATION))
+            this.range = refrigerationDefaultTemp;
     }
 }

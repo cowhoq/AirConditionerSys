@@ -1,5 +1,6 @@
 package org.app.common;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -31,11 +32,12 @@ public class GlobalExceptionHandler {
 
     /**
      * 参数错误
+     * <p>
+     * TODO: 优化返回的错误信息, 修改成不携带后端函数名
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public R<String> exceptionHandler(IllegalArgumentException e) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public R<String> exceptionHandler(ConstraintViolationException e) {
         var message = e.getMessage();
-        log.error(e.getMessage());
         return R.error(message);
     }
 }

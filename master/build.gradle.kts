@@ -25,6 +25,8 @@ dependencies {
     // mybatis-plus 依赖
     implementation("com.baomidou:mybatis-plus-boot-starter:3.5.5")
     implementation("org.springframework.boot:spring-boot-starter-aop")
+    // 添加验证依赖
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-web")

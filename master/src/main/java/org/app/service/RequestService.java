@@ -2,6 +2,7 @@ package org.app.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.app.aop.CheckWorkMode;
 import org.app.entity.dto.Period;
 import org.app.entity.Request;
 import org.app.mapper.RequestMapper;
@@ -39,6 +40,7 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
      * TODO: 这个方法对应于需求文档中的第12条, 第12条所需要的信息更为具体,
      *       所以我希望放到接口层完成, 如果有需要可以分成不同层完成此工作
      */
+    @CheckWorkMode
     public List<Request> getRequestListByPeriod(Period period) {
         switch (period) {
             // 获取月度报表, 即获取上个月的报表
@@ -67,6 +69,7 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
         return null;
     }
 
+    @CheckWorkMode
     public List<Request> getRoomRequestList(Long roomId) {
         LambdaQueryWrapper<Request> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Request::getRoomId, roomId);
