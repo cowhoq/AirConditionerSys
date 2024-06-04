@@ -93,7 +93,6 @@ public class FrontController {
     /**
      * 获取主机工作状态
      */
-    @CheckWorkMode
     @GetMapping("/getWorKMode")
     public R<String> getWorkMode() {
         return R.success(masterService.getWorkMode().toString());
