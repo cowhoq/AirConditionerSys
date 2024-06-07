@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       mode: 'cool',
-      fanSpeed: '',
+      fanSpeed: 'FAST',
       timer: null, // 用于存储 setTimeout 的 ID
     };
   },
