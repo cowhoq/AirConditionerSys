@@ -10,7 +10,7 @@
         <label for="room-id" class="room-label">当前费用: </label>
         <span class="room-number">{{ fee }}¥</span>
       </div>
-      <div class = "energy-info">
+      <div class="energy-info">
         <label for="room-id" class="room-label">能耗：</label>
         <span class="room-number">{{ energy }}KW/h</span>
       </div>
@@ -19,15 +19,15 @@
       </button>
       <div v-if="state" class="controls">
         <div class="left-panel">
-          <TemperatureDisplay />
+          <TemperatureDisplay/>
         </div>
         <div class="right-panel">
-          <TemperatureControl />
-        </div>       
+          <TemperatureControl/>
+        </div>
       </div>
       <div v-else>
-        <button @click="logout" class="logout-button">退出</button> 
-      </div>      
+        <button @click="logout" class="logout-button">退出</button>
+      </div>
     </main>
   </div>
 </template>
@@ -44,8 +44,7 @@ export default {
     TemperatureControl,
   },
   data() {
-    return {
-    };
+    return {};
   },
   methods: {
     toggleAirConditioning() {
@@ -53,11 +52,11 @@ export default {
         alert('host is not true');
         return false;
       }
-      this.$store.dispatch('toggleAirConditioning');  
+      this.$store.dispatch('toggleAirConditioning');
       this.intervalId = setInterval(() => {
         this.$store.dispatch('getFeeAndEnergy');
       }, 1000);
-        
+
     },
     logout() {
       this.$store.dispatch('logout');
@@ -70,7 +69,7 @@ export default {
       return this.$store.state.roomNumber;
     },
     state() {
-        return this.$store.state.airConditioning;
+      return this.$store.state.airConditioning;
     },
     Host() {
       return this.$store.state.Host;
@@ -92,20 +91,21 @@ export default {
   justify-content: center;
   margin-top: 10px;
 }
+
 .control-panel {
   background: linear-gradient(-45deg, #83a4d4, #b6fbff, #83a4d4, #b6fbff);
   background-size: 400% 400%;
   animation: BackgroundGradient 15s ease infinite;
-  border: 1px solid #dee2e6; 
+  border: 1px solid #dee2e6;
   padding: 20px;
-  margin: 20px auto; 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-  border-radius: 8px; 
-  max-width: 1200px; 
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center; 
+  text-align: center;
 }
 
 h1 {
@@ -182,7 +182,7 @@ button.active {
 
 .temperature-setting, .fan-speed-buttons {
   width: 100%;
-  text-align: center; 
+  text-align: center;
   margin-bottom: 20px;
 }
 
@@ -203,8 +203,14 @@ button.active {
 }
 
 @keyframes BackgroundGradient {
-  0% {background-position: 0% 50%;}
-  50% {background-position: 100% 50%;}
-  100% {background-position: 0% 50%;}
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 </style>

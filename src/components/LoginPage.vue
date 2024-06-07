@@ -18,6 +18,7 @@
 <script>
 /* import axios from 'axios'; */
 import axiosRequest from '../axiosRequest';
+
 export default {
   data() {
     return {
@@ -26,59 +27,34 @@ export default {
     };
   },
   methods: {
-    
+
     async login() {
-    console.log(this.roomNumber, this.idNumber);
-    try {
-      let r = await axiosRequest({
-        url: '/login',
-        method: 'post',
-        params: {
-          roomId: this.roomNumber,
-          name: this.idNumber,
-          password: '123456'
+      console.log(this.roomNumber, this.idNumber);
+      try {
+        let r = await axiosRequest({
+          url: '/login',
+          method: 'post',
+          params: {
+            roomId: this.roomNumber,
+            name: this.idNumber,
+            password: '123456'
+          }
+        })
+        console.log('Response status:', r);
+        if (r.data.code == 1) {
+          console.log('Login successful:', r.data);
+          this.$store.commit('SET_ROOM_NUMBER', this.roomNumber);  // 调用 mutation 并传递参数
+          this.$router.push('/control-panel');
+        } else {
+          console.log('Login failed:', r.data);
+          alert(r.data.message || '登录失败，请检查输入或稍后重试。');
         }
-      })
-      console.log('Response status:', r);
-      if (r.data.code == 1) {
-        console.log('Login successful:', r.data);
-        this.$store.commit('SET_ROOM_NUMBER', this.roomNumber);  // 调用 mutation 并传递参数
-        this.$router.push('/control-panel');
-      } else{
-        console.log('Login failed:', r.data);
-        alert(r.data.message || '登录失败，请检查输入或稍后重试。');
-      }
-        
-      
-    } catch (r) {
+
+
+      } catch (r) {
         console.error('出错了: ' + r.message);
-    }
-  }
-    /* login() {
-      console.log('Login with room number:', this.roomNumber, 'and id number:', this.idNumber);
-      axios.post('/api/login', {
-        params: {
-          roomId: this.roomNumber,
-          name: this.idNumber,
-          password: 'czl'
-        }
-      })
-      .then(response => {
-      console.log('Response status:', response.status);
-      if (response.status === 200) {
-        console.log('Login successful:', response.data);
-        this.$store.dispatch('setRoomNumber', this.roomNumber);
-        this.$router.push('/control-panel');
-      } else {
-        console.log('Login failed:', response.data);
-        alert(response.data.message || '登录失败，请检查输入或稍后重试。');
       }
-    })
-    .catch(error => {
-      console.error('Error on login:', error);
-      alert(error.response && error.response.data && error.response.data.message ? error.response.data.message : '登录失败，请检查输入或稍后重试。');
-    });
-    } */
+    }
   }
 }
 </script>

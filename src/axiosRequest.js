@@ -59,8 +59,5 @@ service.interceptors.response.use((response) => {
         return Promise.reject(error)
     }
 )
-// export default async function axiosRequest(config) {
-//     return service.request<T>(config).then((res) => res.data)
-// }
 
 export default service;

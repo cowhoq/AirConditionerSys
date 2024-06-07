@@ -17,9 +17,9 @@ export default {
   },
   mounted() {
     console.log('Component mounted, fetching temperature...');
-    
+
     // 初始化获取数据
-    this.$store.dispatch('getCurrentTemperature'); 
+    this.$store.dispatch('getCurrentTemperature');
     this.$store.dispatch('getMasterStatus');
     this.$store.dispatch('getFanStatus');
 
@@ -27,18 +27,18 @@ export default {
     this.intervals.push(setInterval(() => {
       this.$store.dispatch('getMasterStatus');
     }, 1000));
-    
+
     // 每隔一秒获取一次送风状态
     this.intervals.push(setInterval(() => {
       this.$store.dispatch('getFanStatus');
     }, 1000));
-    
+
     // 每隔一秒获取一次当前温度
     this.intervals.push(setInterval(() => {
       this.$store.dispatch('getCurrentTemperature');
     }, 1000));
 
-    
+
   },
   beforeDestroy() {
     // 清除所有定时器
@@ -52,11 +52,11 @@ export default {
       return this.$store.state.hostTemperatureHigh;
     },
     hostMode() {
-      return this.$store.state.hostMode; 
+      return this.$store.state.hostMode;
     },
     fanStatus() {
       console.log('fanStatus', this.$store.state.fanStatus);
-      return this.$store.state.fanStatus;   
+      return this.$store.state.fanStatus;
     },
     currentTemperature() {
       return this.$store.state.currentTemperature;

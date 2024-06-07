@@ -31,19 +31,23 @@ export default {
     setFanSpeed(fanSpeed) {
       this.fanSpeed = fanSpeed;
     },
+
     changeTemperature(index) {
-      if (
-        this.$store.state.hostMode === 'REFRIGERATION' &&
-        this.$store.state.targetTemperature / 100 >= 18 &&
-        this.$store.state.targetTemperature / 100 <= 25
-      ) {
-        if (index === 1) {
-          this.$store.dispatch('increaseTemperature', this.targetTemperature + 1);
-        } else if (index === -1) {
-          this.$store.dispatch('decreaseTemperature', this.targetTemperature - 1);
-        }
+      const minTemp = this.$store.state.hostTemperatureLow;
+      const maxTemp = this.$store.state.hostTemperatureHigh;
+      const newTemp = this.$store.state.targetTemperature / 100 + index;
+      if (newTemp < minTemp || newTemp > maxTemp) {
+
+        window.alert(`当前温度已经达到上下限，无法再次调节。`);
+        return;
+      }
+      if (index === 1) {
+        this.$store.dispatch('increaseTemperature', this.targetTemperature + 100);
+      } else if (index === -1) {
+        this.$store.dispatch('decreaseTemperature', this.targetTemperature - 100);
       }
     },
+
     submitSettings() {
       let speed = this.fanSpeed.toString();
       console.log('this.fanSpeed', speed);
@@ -74,6 +78,7 @@ export default {
   color: #333; /* 深灰色 */
   margin-bottom: 10px; /* 标签与内容的间距 */
 }
+
 .control-panel {
   border: 1px solid #ccc;
   padding: 30px;
