@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.app.entity.dto.Period;
 import org.app.entity.Request;
 import org.app.mapper.RequestMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,9 +15,6 @@ import java.util.List;
  */
 @Service
 public class RequestService extends ServiceImpl<RequestMapper, Request> {
-    @Autowired
-    RoomService roomService;
-
     /**
      * 查询房间的全部请求
      * <p>

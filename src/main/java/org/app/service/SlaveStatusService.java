@@ -54,8 +54,7 @@ public class SlaveStatusService {
             slaveStatus.setStatus("关机");
             slaveStatus.setRegisteredTime(LocalDateTime.now());
             // 用户如果登出, 则需要重置费用和能量
-            slaveStatus.setEnergy(new BigDecimal(0));
-            slaveStatus.setFee(new BigDecimal(0));
+            slaveStatus.zero();
             slaveStatusMap.put(roomId, slaveStatus);
         }
     }

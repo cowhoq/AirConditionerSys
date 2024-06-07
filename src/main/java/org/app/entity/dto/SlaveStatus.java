@@ -45,4 +45,9 @@ public class SlaveStatus {
     public void addFee(BigDecimal fee) {
         this.fee = this.fee.add(fee);
     }
+
+    public void zero() {
+        this.energy = new BigDecimal(0);
+        this.fee = new BigDecimal(0);
+    }
 }

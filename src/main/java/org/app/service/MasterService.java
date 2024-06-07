@@ -39,7 +39,7 @@ public class MasterService {
     private RoomService roomService;
 
     @Value("classpath:config.json")
-    Resource resource;
+    private Resource resource;
 
     private List<Integer> heatingDefaultTemp;
 
@@ -52,9 +52,9 @@ public class MasterService {
 
     /**
      * -- GETTER --
-     *  获取主机工作的温度范围
-     *  <p>
-     *  原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
+     * 获取主机工作的温度范围
+     * <p>
+     * 原先这部分是使用 `@Getter` 实现的, 后来加入了AOP, 所以改为了显示地写出了这部分代码
      */
     @Setter
     @Getter
@@ -185,12 +185,7 @@ public class MasterService {
         }
     }
 
-    /**
-     * 根据 roomId 从 requestList 中获取请求
-     *
-     * @param roomId 从机的 roomId
-     * @return 获取的请求
-     */
+
     private Request getRequest(Long roomId) {
         var indexOpt = IntStream.range(0, requestList.size()).
                 filter(i -> Objects.equals(requestList.get(i).getRoomId(), roomId)).
@@ -264,6 +259,7 @@ public class MasterService {
                 // 从请求列表中获取第一次, 然后将其插入到队列末尾
                 var request = requestList.removeFirst();
                 requestList.addLast(request);
+                // TODO: 这里为什么要校验温度呢?
                 if (checkRequestTemp(request)) {
                     sendAirRoomId.add(request.getRoomId());
                     count++;
