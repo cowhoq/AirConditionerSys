@@ -62,7 +62,7 @@ public class SlaveStatusService {
     /**
      * 更新注册状态
      */
-    public void updateId(Long roomId) {
+    public void updateRegisteredTime(Long roomId) {
         if (this.isRegistered(roomId)) {
             var slaveStatus = slaveStatusMap.get(roomId);
             slaveStatus.setRegisteredTime(LocalDateTime.now());

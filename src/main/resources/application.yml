@@ -16,7 +16,10 @@ spring:
         encoding: utf-8
         # 禁用缓存
         cache: false
-
+    # 启动虚拟线程的支持
+    threads:
+        virtual:
+            enabled: true
 mybatis-plus:
     configuration:
         # 在映射实体或者属性时, 将数据库中表名和字段名中的下划线去掉, 开启按照驼峰命名法映射
@@ -27,7 +30,6 @@ mybatis-plus:
             id-type: ASSIGN_ID
 master:
     fixedRate: 1000
-    TEST: false
     EXPIRY_DURATION: 6
     pollingInterval: 500
 

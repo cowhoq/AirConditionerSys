@@ -40,7 +40,7 @@ public class RequestService extends ServiceImpl<RequestMapper, Request> {
             // 获取月度报表, 即获取上个月的报表
             case MONTH -> {
                 var now = LocalDate.now();
-                LocalDate start = now.minusDays(30); // 从今天向前减 30 天
+                var start = now.minusDays(30);
                 var lqw = new LambdaQueryWrapper<Request>();
                 lqw.between(Request::getStartTime, start, now);
                 return this.list(lqw);

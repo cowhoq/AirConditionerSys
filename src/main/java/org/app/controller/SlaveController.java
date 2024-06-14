@@ -135,7 +135,7 @@ public class SlaveController {
         var list = masterService.slavePowerOff(roomId);
         if (list != null) {
             slaveStatusService.updateSlaveEnergyAndFee(roomId, list.get(0), list.get(1));
-            slaveStatusService.updateId(roomId);
+            slaveStatusService.updateRegisteredTime(roomId);
             return R.success(true);
         }
         return R.success(false);
@@ -152,7 +152,7 @@ public class SlaveController {
     @CheckWorkMode
     @PostMapping("/sendAir")
     public R<Boolean> sendAir(@NotNull Long roomId, @NotNull Integer setTemp, @NotNull Integer curTemp, @NotBlank String mode) {
-        slaveStatusService.updateId(roomId);
+        slaveStatusService.updateRegisteredTime(roomId);
         slaveStatusService.updateSlaveStatus(roomId, curTemp, setTemp, "正常", mode);
         var r = masterService.contains(roomId);
         if (TEST)
